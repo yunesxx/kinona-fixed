@@ -1,0 +1,80 @@
+@import url('https://fonts.googleapis.com/css2?family=Pacifico&family=Tajawal:wght@300;400;500;700;800&family=Noto+Sans+Arabic:wght@400;500;700&display=swap');
+
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;
+  /* إزالة وميض اللمس الرمادي على أندرويد — إحساس أنعم */
+  -webkit-tap-highlight-color:transparent;
+}
+html{height:100%;overflow:hidden;
+  /* منع تكبير/تصغير النص التلقائي على الجوال */
+  -webkit-text-size-adjust:100%;text-size-adjust:100%;
+}
+body{
+  height:100%;font-family:'Tajawal',sans-serif;background:#f5f5f7;
+  direction:rtl;overflow-x:hidden;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+  overscroll-behavior:contain;font-size:16px;line-height:1.5;
+}
+/* لما الشات مفتوح: خلفية الـ body سودا حتى أي فراغ بين الـ chat-view
+   والكيبورد (على بعض أجهزة أندرويد سامسونغ) يطلع أسود مش أبيض */
+body.chat-open{background:#000;}
+
+/* Touch optimization — removes 300ms tap delay */
+a,button,input,select,textarea,[role="button"]{touch-action:manipulation;}
+
+/* تمرير انسيابي بقصور ذاتي على كل المناطق القابلة للتمرير */
+#msgs,#chats-list,.scroll-y,[data-scroll]{
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
+}
+
+/* السماح بتحديد النص في حقول الإدخال والرسائل */
+input,textarea,.bub,.msg-img,[contenteditable]{
+  -webkit-user-select:text;user-select:text;
+}
+
+:root{
+  /* Brand */
+  --blue:#1877f2;
+  --grad:linear-gradient(135deg,#ff416c,#ff6b35,#f7971e,#ffd200);
+  --grad-r:linear-gradient(315deg,#ff416c,#ff6b35,#f7971e,#ffd200);
+
+  /* Semantic colors */
+  --primary:#ff416c;
+  --primary-soft:rgba(255,65,108,.1);
+  --dark:#0d0d0d;
+  --gray:#65676b;
+  --light:#b0b3b8;
+  --success:#22c55e;
+  --danger:#ff416c;
+  --warning:#f7971e;
+
+  /* Surfaces */
+  --bg-page:#f5f5f7;
+  --bg-card:#ffffff;
+  --bg-input:#f5f5f5;
+  --border:#ebebeb;
+  --border-focus:#ff6b35;
+
+  /* Shadows */
+  --shadow-sm:0 1px 4px rgba(0,0,0,.06);
+  --shadow-md:0 4px 16px rgba(0,0,0,.1);
+  --shadow-lg:0 12px 40px rgba(0,0,0,.14);
+
+  /* Radius */
+  --radius-sm:10px;
+  --radius-md:16px;
+  --radius-lg:24px;
+  --radius-full:999px;
+
+  /* Spacing */
+  --space-xs:4px;--space-sm:8px;--space-md:16px;
+  --space-lg:24px;--space-xl:32px;
+
+  /* Transitions */
+  --ease:cubic-bezier(.4,0,.2,1);
+  --t-fast:150ms var(--ease);
+  --t-base:250ms var(--ease);
+  --t-slow:400ms var(--ease);
+}
+

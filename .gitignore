@@ -1,0 +1,8 @@
+.vercel
+.env*.local
+.env
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+node_modules/

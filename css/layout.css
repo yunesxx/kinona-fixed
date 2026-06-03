@@ -1,0 +1,110 @@
+/* ══════════ APP ══════════ */
+#app-screen{display:none;min-height:100dvh;padding-bottom:70px;}
+.topbar{
+  position:sticky;top:0;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  padding:10px 16px;display:flex;align-items:center;
+  justify-content:space-between;z-index:50;
+}
+.topbar-logo{font-size:24px;font-family:'Pacifico',cursive;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.topbar-center{flex:1;text-align:center;}
+.topbar-username{font-size:17px;font-weight:800;color:#111;font-family:'Tajawal',sans-serif;}
+.topbar-icons{display:flex;align-items:center;gap:8px;}
+.topbar-settings-wrap{position:relative;}
+.topbar-btn{
+  width:40px;height:40px;border-radius:var(--radius-full);border:none;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:all var(--t-fast);flex-shrink:0;
+  min-width:44px;min-height:44px;
+}
+.topbar-btn:active{transform:scale(.88);}
+/* ══ Hamburger Toggle (UIverse adapted) ══ */
+#settings-toggle-cb{display:none;}
+.settings-hamburger{
+  width:40px;height:40px;cursor:pointer;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:6px;transition:all .3s;
+  border-radius:var(--radius-sm);
+  padding:8px;min-width:44px;min-height:44px;
+}
+.hbar{
+  width:22px;height:3px;
+  background:var(--grad);
+  border-radius:5px;transition:.3s;
+  display:block;
+}
+#settings-toggle-cb:checked + .settings-hamburger .hbar{margin-right:5px;}
+#settings-toggle-cb:checked + .settings-hamburger #hbar2{
+  transform:rotate(135deg);margin-right:0;transform-origin:center;
+}
+#settings-toggle-cb:checked + .settings-hamburger #hbar1{
+  transform:rotate(45deg);transform-origin:right center;
+}
+#settings-toggle-cb:checked + .settings-hamburger #hbar3{
+  transform:rotate(-45deg);transform-origin:right center;
+}
+
+/* ══ Settings Dropdown ══ */
+@keyframes sdFadeIn{from{opacity:0;transform:translateY(-8px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+.settings-dropdown{
+  display:none;position:absolute;top:calc(100% + 10px);left:0;
+  background:rgba(255,255,255,.96);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border:1px solid rgba(0,0,0,.06);
+  border-radius:var(--radius-md);min-width:230px;
+  box-shadow:var(--shadow-lg);
+  overflow:hidden;z-index:200;
+}
+.settings-dropdown.show{display:block;animation:sdFadeIn .25s var(--ease);}
+.settings-dropdown-item{
+  display:flex;align-items:center;gap:12px;width:100%;
+  padding:14px 16px;border:none;background:none;
+  font-family:inherit;font-size:14px;font-weight:600;
+  color:#222;cursor:pointer;transition:background var(--t-fast);
+  min-height:44px;
+}
+.settings-dropdown-item:active{background:#f5f5f5;}
+.settings-dropdown-item svg{flex-shrink:0;stroke:#888;}
+.settings-dropdown-divider{height:1px;background:#f0f0f0;margin:4px 14px;}
+.settings-dropdown-logout{color:#ff416c;}
+.settings-dropdown-logout svg{stroke:#ff416c!important;}
+
+/* وضع الحساب row */
+.settings-privacy-row{cursor:default;justify-content:space-between;}
+.settings-privacy-row:active{background:none;}
+
+/* Toggle Switch */
+.prv-switch{position:relative;width:44px;height:24px;flex-shrink:0;}
+.prv-switch input{display:none;}
+.prv-slider{
+  position:absolute;inset:0;border-radius:24px;
+  background:#ddd;transition:background var(--t-base);cursor:pointer;
+}
+.prv-slider::before{
+  content:'';position:absolute;
+  width:18px;height:18px;border-radius:50%;
+  background:#fff;top:3px;right:3px;
+  transition:transform var(--t-base);
+  box-shadow:0 1px 4px rgba(0,0,0,.2);
+}
+.prv-switch input:checked + .prv-slider{background:var(--grad);}
+.prv-switch input:checked + .prv-slider::before{transform:translateX(-20px);}
+
+
+/* صورة البروفايل في الـ nav */
+.nav-av-circle{
+  width:26px;height:26px;border-radius:50%;
+  background:var(--grad);overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:800;color:#fff;
+  flex-shrink:0;
+}
+.nav-av-circle img{width:100%;height:100%;object-fit:cover;}
+.nav-btn.active .nav-av-circle{
+  outline:2.5px solid #fff;
+  outline-offset:1.5px;
+}
+

@@ -1,0 +1,433 @@
+
+/* ══════════════════════════════════════
+   CINEMA ROOM
+══════════════════════════════════════ */
+
+/* ── Lock Screen ── */
+#cinema-lock{
+  position:fixed;top:58px;left:0;right:0;bottom:70px;z-index:40;
+  display:flex;align-items:center;justify-content:center;
+  background:#000;
+}
+.cinema-lock-bg{
+  position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse at 50% 20%,rgba(255,65,108,.15) 0%,transparent 55%),
+    radial-gradient(ellipse at 20% 80%,rgba(255,107,53,.1) 0%,transparent 45%),
+    radial-gradient(ellipse at 80% 70%,rgba(255,160,0,.08) 0%,transparent 40%);
+  animation:ciLockBg 8s ease-in-out infinite;
+}
+@keyframes ciLockBg{
+  0%,100%{opacity:1;}
+  50%{opacity:.7;}
+}
+.cinema-lock-box{
+  position:relative;z-index:1;
+  width:90%;max-width:380px;
+  padding:36px 28px;
+  text-align:center;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,107,53,.2);
+  border-radius:28px;
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  animation:ciLockIn .6s cubic-bezier(.32,1.6,.5,1) both;
+}
+@keyframes ciLockIn{from{opacity:0;transform:translateY(40px) scale(.95)}to{opacity:1;transform:none}}
+.cinema-lock-icon{
+  width:80px;height:80px;border-radius:50%;
+  background:linear-gradient(135deg,#ff416c,#ff6b35);
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 18px;
+  box-shadow:0 0 40px rgba(255,107,53,.4),0 0 80px rgba(255,107,53,.15);
+  animation:ciIconPulse 3s ease-in-out infinite;
+}
+@keyframes ciIconPulse{
+  0%,100%{box-shadow:0 0 40px rgba(255,107,53,.4),0 0 80px rgba(255,107,53,.15);}
+  50%{box-shadow:0 0 60px rgba(255,107,53,.6),0 0 120px rgba(255,107,53,.25);}
+}
+.cinema-lock-title{
+  font-size:28px;font-weight:900;color:#fff;
+  margin-bottom:6px;letter-spacing:1px;
+  text-shadow:0 0 30px rgba(255,107,53,.5);
+}
+.cinema-lock-sub{font-size:13px;color:rgba(255,255,255,.45);margin-bottom:28px;letter-spacing:.5px;}
+.cinema-lock-input{
+  display:block;
+  width:100%;max-width:240px;
+  padding:12px 24px;
+  font-size:15px;font-family:inherit;
+  color:#111;
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:9999px;
+  outline:none;
+  text-align:center;
+  letter-spacing:4px;
+  transition:border-color .2s, box-shadow .2s;
+  -webkit-user-select:text;user-select:text;
+  appearance:none;
+}
+.cinema-lock-input::placeholder{color:#9ca3af;letter-spacing:2px;font-size:14px;}
+.cinema-lock-input:focus{
+  border-color:#3b82f6;
+  box-shadow:0 0 0 3px rgba(59,130,246,.15);
+}
+.cinema-lock-err{
+  font-size:13px;color:#ff6b6b;min-height:20px;
+  margin-top:10px;font-weight:600;
+}
+.cinema-lock-btn{
+  width:100%;margin-top:20px;
+  background:linear-gradient(135deg,#ff416c,#ff6b35,#ffa500);
+  border:none;border-radius:14px;padding:16px;
+  font-family:inherit;font-size:17px;font-weight:800;color:#fff;
+  cursor:pointer;transition:opacity .15s,transform .1s;
+  letter-spacing:.5px;
+  box-shadow:0 4px 20px rgba(255,107,53,.4);
+}
+.cinema-lock-btn:active{opacity:.9;transform:scale(.98);}
+.cinema-lock-btn:disabled{opacity:.6;}
+
+/* ── Cinema Room ── */
+#cinema-room{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  background:#000;
+  display:none;
+  overflow:hidden;
+}
+#cinema-room.show{ display:flex; flex-direction:column; }
+
+/* ── Viewers Badge ── */
+#ci-viewers-badge{
+  position:absolute;top:18px;right:18px;z-index:20;
+  display:flex;align-items:center;gap:6px;
+  background:rgba(0,0,0,.35);backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:20px;padding:6px 14px 6px 10px;
+  color:#fff;font-size:13px;font-weight:700;
+  box-shadow:0 2px 12px rgba(0,0,0,.3);
+}
+#ci-viewers-badge .vb-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:#22c55e;
+  box-shadow:0 0 6px #22c55e;
+  animation:vbPulse 2s infinite;
+}
+@keyframes vbPulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.6;transform:scale(.8);}}
+#ci-viewers-badge .vb-icon{font-size:15px;}
+#ci-viewers-badge .vb-num{font-size:14px;font-weight:900;color:#fff;}
+
+/* ── Back Button ── */
+#ci-back-btn{
+  position:absolute;top:16px;left:16px;z-index:20;
+  background:rgba(0,0,0,.35);backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:50%;width:40px;height:40px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;color:#fff;
+}
+
+/* ── Admin Toggle ── */
+#ci-admin-toggle{
+  position:absolute;top:16px;left:64px;z-index:20;
+}
+
+/* ── Reactions (transparent, left side) ── */
+#ci-react-btns{
+  position:absolute;left:8px;bottom:75px;
+  z-index:20;
+  display:flex;flex-direction:row;gap:4px;
+  padding:5px 8px;
+  background:transparent;
+}
+.ci-react-btn{
+  background:none;border:none;
+  font-size:22px;cursor:pointer;
+  width:38px;height:38px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:50%;
+  transition:transform .12s, opacity .12s;
+  -webkit-tap-highlight-color:transparent;
+  line-height:1;
+  opacity:0.25;
+  filter:grayscale(30%);
+}
+.ci-react-btn:active{transform:scale(1.5);opacity:1;filter:none;}
+
+/* ── Flying Emojis — كامل الشاشة ── */
+#ci-reactions-fly{
+  position:absolute;inset:0;
+  z-index:25;pointer-events:none;
+  overflow:hidden;
+}
+.fly-emoji{
+  position:absolute;
+  font-size:36px;
+  animation:flyFull 3s ease-out forwards;
+  will-change:transform,opacity;
+}
+@keyframes flyFull{
+  0%  {opacity:0;transform:translate(var(--sx),var(--sy)) scale(0);}
+  20% {opacity:0.9;transform:translate(var(--sx),var(--sy)) scale(1.3);}
+  70% {opacity:0.7;transform:translate(var(--ex),var(--ey)) scale(1);}
+  100%{opacity:0;transform:translate(var(--ex),var(--ey)) scale(0.6);}
+}
+
+/* ── Chat Messages ── */
+#cinema-chat-msgs{
+  position:absolute;bottom:70px;right:0;
+  width:min(240px,48vw);max-height:180px;
+  overflow:hidden;z-index:20;
+  padding:0 12px;
+  display:flex;flex-direction:column;gap:4px;
+  pointer-events:none;
+}
+
+/* ── Chat Input ── */
+#ci-chat-bar{
+  position:absolute;bottom:0;left:0;right:0;z-index:20;
+  padding:10px 14px 28px;
+  background:linear-gradient(to top,rgba(0,0,0,.65) 60%,transparent);
+  display:flex;gap:8px;align-items:center;
+}
+#ci-chat-input{
+  flex:1;background:rgba(255,255,255,.1);
+  border:1px solid rgba(255,255,255,.15);border-radius:24px;
+  padding:10px 16px;font-family:inherit;font-size:14px;
+  color:#fff;outline:none;
+  -webkit-user-select:text;user-select:text;
+}
+#ci-chat-send{
+  background:linear-gradient(135deg,#ff416c,#ff6b35);
+  border:none;border-radius:50%;width:40px;height:40px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;flex-shrink:0;
+}
+
+/* ── Announce Overlay ── */
+#ci-announce-overlay{
+  position:absolute;inset:0;z-index:200;
+  display:flex;align-items:center;justify-content:center;
+  pointer-events:none;opacity:0;transition:opacity .4s;
+}
+#ci-announce-box{
+  background:linear-gradient(135deg,rgba(168,85,247,.18),rgba(99,102,241,.18));
+  border:1.5px solid rgba(168,85,247,.5);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border-radius:24px;padding:28px 38px;max-width:80%;text-align:center;
+  box-shadow:0 0 60px rgba(168,85,247,.35),0 0 120px rgba(99,102,241,.2);
+}
+
+  border-radius:2px;transition:width .5s linear;pointer-events:none;
+}
+.cinema-progress-thumb{
+  position:absolute;top:50%;right:0;
+  width:14px;height:14px;border-radius:50%;
+  background:#fff;transform:translate(50%,-50%);
+  box-shadow:0 2px 8px rgba(0,0,0,.4);
+  pointer-events:none;
+}
+.cinema-ctrl-row{
+  display:flex;align-items:center;gap:14px;
+}
+.cinema-ctrl-btn{
+  background:none;border:none;color:#fff;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  padding:6px;border-radius:8px;transition:background .15s;
+  -webkit-tap-highlight-color:transparent;
+}
+.cinema-ctrl-btn:active{background:rgba(255,255,255,.15);}
+.cinema-time{font-size:12px;color:rgba(255,255,255,.7);flex:1;}
+.cinema-vol-wrap{display:flex;align-items:center;gap:8px;}
+.cinema-vol-slider{width:70px;accent-color:#ff6b35;}
+
+/* Admin badge */
+.cinema-admin-badge{
+  background:linear-gradient(135deg,#ff416c,#ff6b35);
+  border-radius:8px;padding:3px 10px;
+  font-size:11px;font-weight:800;color:#fff;
+  flex-shrink:0;
+}
+
+/* ── Chat Panel ── */
+.cinema-chat-panel{
+  position:absolute;
+  bottom:140px;left:12px; /* فوق controls */
+  width:min(300px,55vw);
+  max-height:180px;
+  display:flex;flex-direction:column;
+  pointer-events:none;
+}
+.cinema-chat-msgs{
+  flex:1;overflow-y:auto;
+  display:flex;flex-direction:column;
+  gap:4px;padding:4px 0;
+  scrollbar-width:none;
+}
+.cinema-chat-msgs::-webkit-scrollbar{display:none;}
+.cinema-chat-msg{
+  display:inline-flex;align-items:flex-start;gap:5px;
+  max-width:100%;
+}
+.cinema-msg-name{
+  font-size:12px;font-weight:800;color:#ff6b35;
+  flex-shrink:0;white-space:nowrap;
+}
+.cinema-msg-text{
+  font-size:12px;color:#fff;
+  text-shadow:0 1px 4px rgba(0,0,0,.9),0 0 8px rgba(0,0,0,.8);
+  line-height:1.4;word-break:break-word;
+}
+.cinema-msg-admin .cinema-msg-name{color:#ffd200;}
+
+/* Chat input */
+.cinema-chat-input-wrap{
+  position:absolute;bottom:14px;left:0;right:0;
+  padding:0 14px;
+  display:flex;gap:8px;align-items:center;
+  pointer-events:all;
+  z-index:5;
+}
+.cinema-chat-input{
+  flex:1;background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.15);
+  border-radius:22px;padding:10px 16px;
+  font-family:inherit;font-size:14px;color:#fff;
+  outline:none;backdrop-filter:blur(8px);
+  -webkit-user-select:text;user-select:text;
+}
+.cinema-chat-input::placeholder{color:rgba(255,255,255,.35);}
+.cinema-send-btn{
+  background:linear-gradient(135deg,#ff416c,#ff6b35);
+  border:none;border-radius:50%;
+  width:38px;height:38px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+}
+.cinema-send-btn:active{opacity:.8;}
+
+/* ── Admin Toggle Button (Uiverse style) ── */
+#ci-admin-toggle{
+  position:absolute;top:14px;left:62px;z-index:10;
+  display:none; /* controlled by JS */
+  align-items:center;
+}
+.ci-admin-uv-btn{
+  font-family:'Tajawal',sans-serif;
+  font-size:13px;
+  background:linear-gradient(90deg,rgba(24,119,240,1) 0%,rgba(29,37,253,1) 50%,rgba(11,9,140,1) 100%);
+  color:white;
+  padding:0.55em 1em;
+  display:grid;
+  grid-template-columns:auto 0fr;
+  align-items:center;
+  border:none;
+  border-radius:14px;
+  box-shadow:0px 5px 10px rgba(0,0,0,.35);
+  transition:all .3s;
+  cursor:pointer;
+  backdrop-filter:blur(8px);
+}
+.ci-admin-uv-btn:hover{
+  transform:translateY(-3px);
+  box-shadow:0px 8px 15px rgba(0,0,0,.45);
+  grid-template-columns:auto 1fr;
+}
+.ci-admin-uv-btn:active{
+  transform:scale(.95);
+  box-shadow:0px 2px 5px rgba(0,0,0,.3);
+}
+.ci-admin-uv-btn .uv-span{
+  display:block;
+  margin-right:0.4em;
+  transition:all .3s;
+  overflow:hidden;
+}
+.ci-admin-uv-btn svg{transition:all .3s;}
+.ci-admin-uv-btn .uv-svg-wrap{
+  display:flex;align-items:center;justify-content:center;
+  width:26px;height:26px;border-radius:50%;
+  background:rgba(255,255,255,.2);
+  transition:all .3s;
+  flex-shrink:0;
+}
+.ci-admin-uv-btn:hover .uv-svg-wrap{
+  background:rgba(255,255,255,.5);
+  margin-left:0.5em;
+  animation:uv-bounce 1.2s ease-in-out;
+}
+@keyframes uv-bounce{
+  0%{translate:0;}
+  50%{translate:0 -6px;}
+  100%{translate:0;}
+}
+
+/* ── Admin Panel ── */
+#cinema-admin-panel{
+  position:absolute;top:60px;right:12px;
+  width:220px;
+  background:rgba(10,10,10,.92);
+  border:1px solid rgba(255,107,53,.2);
+  border-radius:16px;padding:14px;
+  backdrop-filter:blur(12px);
+  display:none;z-index:10;
+  animation:ciPanelIn .2s ease;
+}
+#cinema-admin-panel.show{display:block;}
+@keyframes ciPanelIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+.cinema-admin-title{
+  font-size:13px;font-weight:800;color:#ff6b35;
+  margin-bottom:12px;display:flex;align-items:center;gap:6px;
+}
+.cinema-admin-section{font-size:11px;color:rgba(255,255,255,.4);margin:10px 0 6px;text-transform:uppercase;letter-spacing:.5px;}
+.cinema-url-input{
+  width:100%;background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:10px;padding:9px 12px;
+  font-family:inherit;font-size:12px;color:#fff;
+  outline:none;margin-bottom:8px;
+  -webkit-user-select:text;user-select:text;
+}
+.cinema-url-input::placeholder{color:rgba(255,255,255,.25);}
+.cinema-admin-btn{
+  width:100%;padding:9px;border:none;border-radius:10px;
+  font-family:inherit;font-size:13px;font-weight:700;
+  cursor:pointer;margin-bottom:6px;transition:opacity .15s;
+}
+.cinema-admin-btn:active{opacity:.8;}
+.btn-grad{background:linear-gradient(135deg,#ff416c,#ff6b35);color:#fff;}
+.btn-dark{background:rgba(255,255,255,.08);color:#fff;}
+.btn-danger{background:rgba(255,65,108,.2);color:#ff416c;border:1px solid rgba(255,65,108,.3);}
+.cinema-viewers-list{max-height:120px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;}
+.cinema-viewer-item{
+  display:flex;align-items:center;gap:8px;
+  padding:6px 8px;border-radius:8px;
+  background:rgba(255,255,255,.05);
+}
+.cinema-viewer-name{flex:1;font-size:12px;color:#fff;}
+.cinema-kick-btn{
+  background:rgba(255,65,108,.15);border:none;
+  border-radius:6px;padding:3px 8px;
+  font-size:11px;color:#ff416c;cursor:pointer;
+  font-family:inherit;font-weight:700;
+}
+.cinema-kick-btn:active{opacity:.7;}
+
+/* password change */
+.cinema-pw-row{display:flex;gap:6px;margin-bottom:6px;}
+.cinema-pw-row input{
+  flex:1;background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:8px;padding:8px 10px;
+  font-family:inherit;font-size:12px;color:#fff;outline:none;
+  -webkit-user-select:text;user-select:text;
+}
+.cinema-pw-row button{
+  background:rgba(255,107,53,.2);border:none;border-radius:8px;
+  padding:8px 12px;font-family:inherit;font-size:12px;
+  color:#ff6b35;cursor:pointer;font-weight:700;white-space:nowrap;
+}
+
