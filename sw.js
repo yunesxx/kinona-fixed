@@ -1,5 +1,5 @@
 // ⚡ بدّل الرقم هنا كل مرة تعمل تحديث للتطبيق
-const VERSION = 'kinona-v4-vidconfirm';
+const VERSION = 'kinona-v5-autoscroll';
 
 self.addEventListener('install', e => {
   // لا تفعّل تلقائياً — انتظر حتى يضغط المستخدم "تحديث"

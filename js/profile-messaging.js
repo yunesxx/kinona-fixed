@@ -180,11 +180,14 @@ function appendMessage(msg, isOut){
     applyChatCosmetics(activeChat.id).catch(() => {});
   }
 
-  // ننزل للأسفل تلقائياً بس إذا:
+  // ننزل للأسفل تلقائياً إذا:
   // 1. أنا اللي أرسلت، أو
-  // 2. المستخدم قريب من الأسفل (أقل من 120px)
+  // 2. المستخدم قريب من الأسفل (أقل من 120px)، أو
+  // 3. الرسالة media (صورة/فيديو/ستكر) — دايماً ننزل عشان المستقبل يشوفها فوراً
   const distFromBottom = msgs.scrollHeight - msgs.scrollTop - msgs.clientHeight;
-  const shouldStick = isOut || distFromBottom < 120;
+  const isMedia = msg.msg_type === 'image' || msg.msg_type === 'video' ||
+                  msg.msg_type === 'img_sticker' || msg.msg_type === 'sticker';
+  const shouldStick = isOut || distFromBottom < 120 || isMedia;
   if(shouldStick){
     msgs.scrollTop = msgs.scrollHeight;
   } else {
@@ -195,6 +198,7 @@ function appendMessage(msg, isOut){
   // الصور/الفيديو تُحمَّل لاحقاً وتكبر بعد النزول للأسفل — فتختفي تحت الشاشة.
   // أعِد النزول بعد تحميل الوسائط حتى تظهر الرسالة كاملة.
   if(shouldStick){
+    // 1) sticky scroll بعد تحميل الـ media
     div.querySelectorAll('img, video').forEach(el => {
       const stick = () => { msgs.scrollTop = msgs.scrollHeight; };
       if(el.tagName === 'IMG'){
@@ -205,6 +209,16 @@ function appendMessage(msg, isOut){
       }
       el.addEventListener('error', stick, {once:true});
     });
+
+    // 2) sticky scroll لمراقبة تغيّر حجم البابل (overlay/caption/poster…)
+    if(isMedia && typeof ResizeObserver !== 'undefined'){
+      const ro = new ResizeObserver(() => {
+        msgs.scrollTop = msgs.scrollHeight;
+      });
+      ro.observe(div);
+      // أوقف المراقبة بعد 8 ثواني (مدة معقولة لاكتمال أي تغيير)
+      setTimeout(() => ro.disconnect(), 8000);
+    }
   }
 }
 
