@@ -1,62 +1,136 @@
+// ══════════════════════════════════════
+// VIDEO SEND — حد أقصى دقيقة + Optimistic UI + رفع بالخلفية
+// ══════════════════════════════════════
+const MAX_VIDEO_DURATION = 60; // ثانية
+const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100MB (سقف معقول لدقيقة)
+
 async function sendVideoMsg(input){
   const file = input.files[0];
   input.value = '';
   if(!file || !activeChat) return;
-  if(file.size > 500 * 1024 * 1024){ showToast('حجم الفيديو أكبر من 500MB'); return; }
 
-  // شاشة Progress
-  const prog = document.createElement('div');
-  prog.id = 'vid-prog-overlay';
-  prog.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.75);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;';
-  prog.innerHTML = `
-    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5"><path d="m22 8-6 4 6 4V8z"/><rect width="14" height="12" x="2" y="6" rx="2"/></svg>
-    <div style="color:#fff;font-size:16px;font-weight:700;">جارٍ رفع الفيديو...</div>
-    <div style="width:260px;background:rgba(255,255,255,.2);border-radius:20px;height:8px;overflow:hidden;">
-      <div id="vid-prog-bar" style="width:0%;height:100%;background:linear-gradient(90deg,#ff416c,#ff6b35,#ffd200);border-radius:20px;transition:width .2s;"></div>
-    </div>
-    <div id="vid-prog-pct" style="color:rgba(255,255,255,.75);font-size:13px;font-weight:600;">0%</div>
-    <div style="color:rgba(255,255,255,.45);font-size:11px;">${(file.size/1024/1024).toFixed(1)} MB</div>`;
-  document.body.appendChild(prog);
+  // 1) فحص الحجم
+  if(file.size > MAX_VIDEO_SIZE){
+    showToast(`حجم الفيديو كبير جداً (${(file.size/1024/1024).toFixed(1)}MB). الحد الأقصى 100MB`);
+    return;
+  }
+
+  // 2) فحص المدة — قراءة metadata قبل أي شي
+  let meta;
+  try {
+    meta = await getVideoMetadata(file);
+  } catch(e){
+    showToast('تعذّر قراءة الفيديو');
+    return;
+  }
+
+  if(!meta.duration || !isFinite(meta.duration)){
+    URL.revokeObjectURL(meta.url);
+    showToast('فيديو غير صالح');
+    return;
+  }
+
+  if(meta.duration > MAX_VIDEO_DURATION + 0.5){
+    URL.revokeObjectURL(meta.url);
+    const secs = Math.round(meta.duration);
+    showToast(`الفيديو ${secs}ث — الحد الأقصى دقيقة واحدة`);
+    return;
+  }
+
+  const chatAtSend = activeChat;
+
+  // 3) Optimistic UI: اعرض الفيديو فوراً في الدردشة
+  const tempId = 'tmp_vid_' + Date.now();
+  const tempMsg = {
+    id: tempId,
+    from_id: currentUser.id,
+    to_id: chatAtSend.id,
+    text: '',
+    msg_type: 'video',
+    media_url: meta.url, // blob URL محلي
+    created_at: new Date().toISOString(),
+    _pending: true
+  };
+  appendMessage(tempMsg, true);
+
+  // overlay صغير "جارٍ الرفع" + شريط تقدم فوق الفيديو
+  const tmpRow = $('msgs')?.querySelector(`[data-id="${tempId}"]`);
+  if(tmpRow){
+    const bub = tmpRow.querySelector('.media-bub');
+    if(bub){
+      const overlay = document.createElement('div');
+      overlay.className = 'msg-uploading-badge';
+      overlay.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,.55);border-radius:inherit;color:#fff;pointer-events:none;gap:8px;';
+      overlay.innerHTML = `
+        <div style="font-size:12px;font-weight:700;">⏳ جارٍ الرفع…</div>
+        <div style="width:140px;height:5px;background:rgba(255,255,255,.25);border-radius:10px;overflow:hidden;">
+          <div class="vup-bar" style="width:0%;height:100%;background:linear-gradient(90deg,#ff416c,#ff6b35,#ffd200);transition:width .2s;"></div>
+        </div>
+        <div class="vup-pct" style="font-size:11px;opacity:.8;">0%</div>`;
+      bub.appendChild(overlay);
+    }
+  }
 
   const updateProg = (pct) => {
-    const bar = document.getElementById('vid-prog-bar');
-    const lbl = document.getElementById('vid-prog-pct');
+    const bar = tmpRow?.querySelector('.vup-bar');
+    const lbl = tmpRow?.querySelector('.vup-pct');
     if(bar) bar.style.width = pct + '%';
     if(lbl) lbl.textContent = pct + '%';
   };
 
-  // رفع لـ Cloudinary مع progress — جرّب video أولاً، ثم auto كـ fallback
+  // 4) رفع لـ Cloudinary بالخلفية
   let _cldVid;
-  console.log('[sendVideoMsg] file:', {name:file.name, type:file.type, size:file.size});
   try {
     _cldVid = await cldUpload(file, updateProg, 'video');
-    console.log('[sendVideoMsg] uploaded via /video/upload');
   } catch(e1) {
-    console.warn('[sendVideoMsg] /video/upload failed:', e1?.message, e1?.detail);
-    // fallback: جرّب auto
+    console.warn('[sendVideoMsg] /video/upload failed:', e1?.message);
     try {
       _cldVid = await cldUpload(file, updateProg, 'auto');
-      console.log('[sendVideoMsg] uploaded via /auto/upload (fallback)');
     } catch(e2) {
-      console.error('[sendVideoMsg] /auto/upload also failed:', e2?.message, e2?.detail);
-      prog.remove();
-      const reason = (e2 && e2.message) ? e2.message : (e1 && e1.message) || '';
-      showToast('فشل رفع الفيديو' + (reason ? ' — ' + reason : ''));
+      console.error('[sendVideoMsg] both endpoints failed:', e2?.message);
+      URL.revokeObjectURL(meta.url);
+      tmpRow?.remove();
+      showToast('فشل رفع الفيديو' + (e2?.message ? ' — ' + e2.message : ''));
       return;
     }
   }
-  prog.remove();
+
   const mediaUrl_vid = cldVid(_cldVid.secure_url);
-  const cid = [currentUser.id, activeChat.id].sort().join('_');
+  const cid = [currentUser.id, chatAtSend.id].sort().join('_');
   const {data:inserted} = await sb.from('messages').insert({
-    chat_id:cid, from_id:currentUser.id, to_id:activeChat.id,
+    chat_id:cid, from_id:currentUser.id, to_id:chatAtSend.id,
     text:'', msg_type:'video', media_url:mediaUrl_vid
   }).select().single();
+
   if(inserted){
-    appendMessage(inserted, true);
-    bumpChatToTop(activeChat.id, '🎥 فيديو');
+    if(tmpRow){
+      tmpRow.dataset.id = inserted.id;
+      const vid = tmpRow.querySelector('video');
+      if(vid){
+        // غيّر الـ src للنسخة المحسّنة من Cloudinary
+        vid.src = mediaUrl_vid;
+        // poster من Cloudinary للمعاينة السريعة
+        if(typeof cldVidPoster === 'function'){
+          const poster = cldVidPoster(_cldVid.secure_url, 480);
+          if(poster) vid.poster = poster;
+        }
+        // نظّف الـ blob URL بعد ما الفيديو يحمل من Cloudinary
+        vid.addEventListener('loadeddata', () => URL.revokeObjectURL(meta.url), {once:true});
+      } else {
+        URL.revokeObjectURL(meta.url);
+      }
+      tmpRow.querySelector('.msg-uploading-badge')?.remove();
+    } else {
+      appendMessage(inserted, true);
+      URL.revokeObjectURL(meta.url);
+    }
+    bumpChatToTop(chatAtSend.id, '🎥 فيديو');
     if(msgChannel) msgChannel.send({type:'broadcast',event:'new_msg',payload:{from:currentUser.id, msg:inserted}});
-    broadcastToInbox(activeChat.id, inserted);
+    broadcastToInbox(chatAtSend.id, inserted);
+  } else {
+    URL.revokeObjectURL(meta.url);
+    tmpRow?.remove();
+    showToast('فشل الإرسال');
   }
 }
 

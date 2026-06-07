@@ -67,6 +67,27 @@ async function compressImage(file, maxDim = 1920, quality = 0.85){
   }
 }
 
+// ══════════════════════════════════════
+// قراءة بيانات الفيديو (المدة، الأبعاد) — قبل الرفع
+// ══════════════════════════════════════
+async function getVideoMetadata(file){
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const v = document.createElement('video');
+    v.preload = 'metadata';
+    v.muted = true;
+    v.playsInline = true;
+    const cleanup = () => { URL.revokeObjectURL(url); v.src=''; };
+    v.onloadedmetadata = () => {
+      const meta = { duration: v.duration, width: v.videoWidth, height: v.videoHeight, url };
+      // ما نمسح الـ URL هنا — العايد رح يستعمله للـ preview
+      resolve(meta);
+    };
+    v.onerror = () => { cleanup(); reject(new Error('failed to read video metadata')); };
+    v.src = url;
+  });
+}
+
 // رفع ملف لـ Cloudinary مع تتبع progress
 // resourceType: 'auto' (افتراضي) | 'image' | 'video' | 'raw'
 async function cldUpload(file, onProgress, resourceType) {
