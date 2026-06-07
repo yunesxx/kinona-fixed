@@ -1,5 +1,5 @@
 // ⚡ بدّل الرقم هنا كل مرة تعمل تحديث للتطبيق
-const VERSION = 'kinona-v2-perf';
+const VERSION = 'kinona-v3-video';
 
 self.addEventListener('install', e => {
   // لا تفعّل تلقائياً — انتظر حتى يضغط المستخدم "تحديث"
