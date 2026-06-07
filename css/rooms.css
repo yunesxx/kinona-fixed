@@ -196,8 +196,10 @@
 #vip-room{
   position:fixed; inset:0; z-index:8500;
   background:#0a0008; overflow:hidden;
-  /* نفس مبدأ #chat-view: الكيبورد يدفع المحتوى لفوق بـ padding بدل
-     ما يقلّص الإطار، فالخلفية تضل ممتدة لتحت بدون فراغ أبيض */
+  /* نفس مبدأ #chat-view: flex column + padding-bottom للكيبورد
+     → المحتوى ينطبق فوق الكيبورد تلقائياً بدون JS */
+  display:none;
+  flex-direction:column;
   padding-bottom: var(--kb, 0px);
   box-sizing: border-box;
 }
@@ -405,13 +407,13 @@
 }
 
 /* ── لوحة الشات ── */
+/* تصبح flex item داخل #vip-room (لا absolute) — تأخذ آخر مكان بالعمود */
 .vip-chat{
-  /* fixed مهم: ع iOS وبعض متصفحات الأندرويد، fixed بـ bottom:0 بيلصق
-     لقاع الـ visual viewport (فوق الكيبورد) بدون أي JS */
-  position:fixed; left:0; right:0; bottom:0; z-index:9;
+  position:relative; z-index:9;
+  margin-top:auto; /* يدفعها لأسفل الـ flex container */
   display:flex; flex-direction:column;
   height:46%;
-  max-height:60vh;
+  flex:0 0 auto;
   background:linear-gradient(180deg, transparent 0%, rgba(10,0,8,.6) 25%, rgba(10,0,8,.85) 100%);
   padding-top:30px;
 }

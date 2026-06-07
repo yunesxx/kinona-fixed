@@ -18,6 +18,7 @@ body{
 /* لما الشات مفتوح: خلفية الـ body سودا حتى أي فراغ بين الـ chat-view
    والكيبورد (على بعض أجهزة أندرويد سامسونغ) يطلع أسود مش أبيض */
 body.chat-open{background:#000;}
+body.vip-open{background:#0a0008;}
 
 /* Touch optimization — removes 300ms tap delay */
 a,button,input,select,textarea,[role="button"]{touch-action:manipulation;}

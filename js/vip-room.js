@@ -86,13 +86,15 @@ function vipAgeReject(){
 
 function openVipRoom(){
   document.querySelector('.bottom-nav')?.style.setProperty('display','none','important');
-  document.getElementById('vip-room').style.display = 'block';
+  document.getElementById('vip-room').style.display = 'flex';
+  document.body.classList.add('vip-open');
   document.getElementById('vip-msgs').innerHTML = '';
   vipJoinChannel();
 }
 
 function vipClose(){
   document.getElementById('vip-room').style.display = 'none';
+  document.body.classList.remove('vip-open');
   document.querySelector('.bottom-nav')?.style.removeProperty('display');
   vipLeaveChannel();
 }
