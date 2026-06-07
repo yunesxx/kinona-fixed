@@ -95,17 +95,20 @@ function openVipRoom(){
 }
 
 // ══════════════════════
-// قَفل لوحة الشات لقاع الـ visual viewport (فوق الكيبورد مباشرةً)
+// حجم الغرفة = حجم الـ visual viewport بالضبط (المنطقة المرئية فوق الكيبورد)
+// — نقيس الغرفة كاملةً مش بس الشات، عشان ما يصير فراغ أبيض تحت
+// — يشتغل سواء المتصفح يدعم interactive-widget=resizes-content أو لا
 // ══════════════════════
 let _vipKbHandler = null;
 function vipStickChatToBottom(){
-  const chat = document.querySelector('#vip-room .vip-chat');
-  if(!chat) return;
+  const room = document.getElementById('vip-room');
+  if(!room) return;
   const vv = window.visualViewport;
-  if(!vv){ chat.style.bottom = '0px'; return; }
-  // المسافة من قاع الـ layout لقاع الـ visual viewport = ارتفاع الكيبورد
-  const kb = Math.max(0, window.innerHeight - vv.offsetTop - vv.height);
-  chat.style.bottom = kb + 'px';
+  if(!vv){ room.style.height=''; room.style.top=''; return; }
+  // ثبّت الغرفة على المنطقة المرئية تماماً: top = أعلى المرئي، height = ارتفاع المرئي
+  room.style.top    = vv.offsetTop + 'px';
+  room.style.bottom = 'auto';
+  room.style.height = vv.height + 'px';
 }
 function vipBindKbTracker(){
   if(_vipKbHandler) return;
@@ -125,7 +128,8 @@ function vipBindKbTracker(){
   };
   vv.addEventListener('resize', _vipKbHandler);
   vv.addEventListener('scroll', _vipKbHandler);
-  // طبّق فوراً + بعد قليل (بعض المتصفحات تأخذ ms قليلة)
+
+  // طبّق فوراً + بعد قليل (بعض المتصفحات تأخذ ms قليلة لتحديث الأبعاد)
   vipStickChatToBottom();
   setTimeout(vipStickChatToBottom, 50);
   setTimeout(vipStickChatToBottom, 250);
@@ -144,8 +148,8 @@ function vipClose(){
   document.body.classList.remove('vip-open');
   document.querySelector('.bottom-nav')?.style.removeProperty('display');
   vipUnbindKbTracker();
-  const chat = document.querySelector('#vip-room .vip-chat');
-  if(chat) chat.style.bottom = '';
+  const room = document.getElementById('vip-room');
+  if(room){ room.style.height=''; room.style.top=''; room.style.bottom=''; }
   vipLeaveChannel();
 }
 
