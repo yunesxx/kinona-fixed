@@ -500,10 +500,21 @@
   from { opacity:1; transform:scale(1); }
   to   { opacity:0; transform:scale(.9); }
 }
-.vip-stage-item img{
+.vip-stage-item img,
+.vip-stage-item video{
   display:block; max-width:100%; max-height:70vh;
   width:auto; height:auto; object-fit:contain;
   background:transparent;
+  border-radius:10px;
+}
+.vip-stage-item video{ background:#000; }
+.vip-stage-caption{
+  margin-top:8px; padding:6px 12px;
+  background:rgba(0,0,0,.55); backdrop-filter:blur(8px);
+  color:#fff; font-size:13px; font-weight:600;
+  border-radius:10px; text-align:center;
+  text-shadow:0 1px 3px rgba(0,0,0,.6);
+  max-width:100%; word-break:break-word;
 }
 .vip-stage-sender{
   position:absolute; top:-26px; left:0;

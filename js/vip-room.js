@@ -204,36 +204,184 @@ function vipSendMsg(){
 }
 
 // ══════════════════════
-// رفع صورة / GIF
+// رفع صورة / GIF — مع شاشة تأكيد + ضغط
 // ══════════════════════
-async function vipUploadMedia(input){
+let _vipPendingImgFile = null;
+let _vipPendingVidFile = null;
+let _vipPendingVidMeta = null;
+
+function vipUploadMedia(input){
   const file = input.files?.[0];
   input.value = '';
   if(!file) return;
   if(!/^image\//.test(file.type)){ showToast('فقط صور أو GIF'); return; }
-  if(file.size > 8 * 1024 * 1024){ showToast('الحجم يتجاوز 8MB'); return; }
+  if(file.size > 20 * 1024 * 1024){ showToast('الحجم يتجاوز 20MB'); return; }
+
+  _vipPendingImgFile = file;
+
+  // معاينة الصورة بشاشة التأكيد
+  const reader = new FileReader();
+  reader.onload = e => {
+    const prev = document.getElementById('vip-img-confirm-preview');
+    if(prev) prev.src = e.target.result;
+    const cap = document.getElementById('vip-img-confirm-caption');
+    if(cap) cap.value = '';
+    document.getElementById('vip-img-confirm-overlay')?.classList.add('show');
+    setTimeout(() => cap?.focus(), 300);
+  };
+  reader.readAsDataURL(file);
+}
+
+function vipCancelImgSend(){
+  _vipPendingImgFile = null;
+  const ov = document.getElementById('vip-img-confirm-overlay');
+  if(ov) ov.classList.remove('show');
+  const prev = document.getElementById('vip-img-confirm-preview');
+  if(prev) prev.src = '';
+}
+
+async function vipConfirmImgSend(){
+  if(!_vipPendingImgFile) return;
+  let file = _vipPendingImgFile;
+  _vipPendingImgFile = null;
+  const caption = document.getElementById('vip-img-confirm-caption')?.value.trim() || '';
+
+  // أغلق الـ overlay فوراً
+  document.getElementById('vip-img-confirm-overlay')?.classList.remove('show');
+
+  // ضغط الصورة قبل الرفع (إلا GIF نخليه كما هو)
+  const isGif = file.type === 'image/gif';
+  if(!isGif && typeof compressImage === 'function'){
+    try { file = await compressImage(file, 1920, 0.85); } catch(_){}
+  }
 
   vipShowUploadProgress(true);
   try {
-    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    const ext = isGif ? 'gif' : 'jpg';
     const path = `vip/${currentUser.id}/${Date.now()}.${ext}`;
     const {error} = await sb.storage.from('posts').upload(path, file, {upsert:true, contentType:file.type});
     if(error) throw error;
     const url = sb.storage.from('posts').getPublicUrl(path).data.publicUrl;
-    const isGif = file.type === 'image/gif' || ext === 'gif';
     const payload = {
       uid: currentUser.id,
       username: currentProfile?.username || 'guest',
       avatar_url: currentProfile?.avatar_url || null,
-      media_url: url, is_gif: isGif, ts: Date.now()
+      media_url: url, is_gif: isGif, caption, ts: Date.now()
     };
     vipRenderMedia(payload, true);
     vipChannel?.send({type:'broadcast', event:'vip_msg', payload});
     vipBumpActivity(2);
   } catch(e){
-    console.error('vipUploadMedia:', e);
+    console.error('vipConfirmImgSend:', e);
     showToast('فشل رفع الصورة');
   } finally {
+    vipShowUploadProgress(false);
+  }
+}
+
+// ══════════════════════
+// رفع فيديو — حد أقصى دقيقة + شاشة تأكيد + Cloudinary
+// ══════════════════════
+async function vipUploadVideo(input){
+  const file = input.files?.[0];
+  input.value = '';
+  if(!file) return;
+  if(!/^video\//.test(file.type)){ showToast('ملف فيديو فقط'); return; }
+  if(file.size > 100 * 1024 * 1024){
+    showToast(`الحجم كبير جداً (${(file.size/1024/1024).toFixed(1)}MB). الحد 100MB`);
+    return;
+  }
+
+  // قراءة المدة
+  let meta;
+  try {
+    meta = await getVideoMetadata(file);
+  } catch(e){
+    showToast('تعذّر قراءة الفيديو');
+    return;
+  }
+
+  if(!meta.duration || !isFinite(meta.duration)){
+    URL.revokeObjectURL(meta.url);
+    showToast('فيديو غير صالح');
+    return;
+  }
+
+  if(meta.duration > 60.5){
+    URL.revokeObjectURL(meta.url);
+    showToast(`الفيديو ${Math.round(meta.duration)}ث — الحد الأقصى دقيقة`);
+    return;
+  }
+
+  _vipPendingVidFile = file;
+  _vipPendingVidMeta = meta;
+
+  // عرض شاشة التأكيد
+  const preview = document.getElementById('vip-vid-confirm-preview');
+  const durLbl  = document.getElementById('vip-vid-confirm-duration');
+  if(preview){
+    preview.src = meta.url;
+    preview.muted = true;
+    preview.play().catch(()=>{});
+  }
+  if(durLbl){
+    const m = Math.floor(meta.duration/60);
+    const s = Math.floor(meta.duration%60).toString().padStart(2,'0');
+    durLbl.textContent = `${m}:${s}`;
+  }
+  const cap = document.getElementById('vip-vid-confirm-caption');
+  if(cap) cap.value = '';
+  document.getElementById('vip-vid-confirm-overlay')?.classList.add('show');
+}
+
+function vipCancelVidSend(){
+  if(_vipPendingVidMeta?.url) URL.revokeObjectURL(_vipPendingVidMeta.url);
+  _vipPendingVidFile = null;
+  _vipPendingVidMeta = null;
+  const preview = document.getElementById('vip-vid-confirm-preview');
+  if(preview){ preview.pause(); preview.src = ''; }
+  document.getElementById('vip-vid-confirm-overlay')?.classList.remove('show');
+}
+
+async function vipConfirmVidSend(){
+  if(!_vipPendingVidFile || !_vipPendingVidMeta) return;
+
+  const file = _vipPendingVidFile;
+  const meta = _vipPendingVidMeta;
+  const caption = document.getElementById('vip-vid-confirm-caption')?.value.trim() || '';
+  _vipPendingVidFile = null;
+  _vipPendingVidMeta = null;
+
+  // أوقف الـ preview واخفي الـ overlay
+  const preview = document.getElementById('vip-vid-confirm-preview');
+  if(preview){ preview.pause(); preview.src = ''; }
+  document.getElementById('vip-vid-confirm-overlay')?.classList.remove('show');
+
+  vipShowUploadProgress(true);
+  try {
+    // رفع لـ Cloudinary (أسرع وأخف للفيديو من Supabase Storage)
+    let _cld;
+    try { _cld = await cldUpload(file, null, 'video'); }
+    catch(e1){
+      try { _cld = await cldUpload(file, null, 'auto'); }
+      catch(e2){ throw e2; }
+    }
+
+    const url = (typeof cldVid === 'function') ? cldVid(_cld.secure_url) : _cld.secure_url;
+    const payload = {
+      uid: currentUser.id,
+      username: currentProfile?.username || 'guest',
+      avatar_url: currentProfile?.avatar_url || null,
+      media_url: url, is_video: true, caption, ts: Date.now()
+    };
+    vipRenderMedia(payload, true);
+    vipChannel?.send({type:'broadcast', event:'vip_msg', payload});
+    vipBumpActivity(2);
+  } catch(e){
+    console.error('vipConfirmVidSend:', e);
+    showToast('فشل رفع الفيديو');
+  } finally {
+    URL.revokeObjectURL(meta.url);
     vipShowUploadProgress(false);
   }
 }
@@ -289,7 +437,7 @@ function vipRenderMedia(p, isMine){
   const stage = document.getElementById('vip-media-stage');
   if(!stage) return;
 
-  // أزل الصورة السابقة فوراً
+  // أزل الميديا السابقة فوراً
   stage.querySelectorAll('.vip-stage-item').forEach(el => el.remove());
   if(_vipStageTimer){ clearTimeout(_vipStageTimer); _vipStageTimer = null; }
 
@@ -310,26 +458,62 @@ function vipRenderMedia(p, isMine){
   sender.appendChild(name);
   item.appendChild(sender);
 
-  if(p.is_gif){
+  // وسم نوع الميديا (GIF / فيديو)
+  if(p.is_video){
+    const tag = document.createElement('div');
+    tag.className = 'vip-stage-gif-tag';
+    tag.textContent = '🎥 فيديو';
+    item.appendChild(tag);
+  } else if(p.is_gif){
     const tag = document.createElement('div');
     tag.className = 'vip-stage-gif-tag';
     tag.textContent = 'GIF';
     item.appendChild(tag);
   }
 
-  const img = document.createElement('img');
-  img.src = p.media_url;
-  img.loading = 'eager';
-  item.appendChild(img);
+  // العنصر الفعلي (فيديو أو صورة)
+  let mediaEl;
+  if(p.is_video){
+    mediaEl = document.createElement('video');
+    mediaEl.src = p.media_url;
+    mediaEl.controls = true;
+    mediaEl.playsInline = true;
+    mediaEl.autoplay = true;
+    mediaEl.muted = true; // autoplay يحتاج muted ع الموبايل
+    mediaEl.loop = false;
+    mediaEl.preload = 'metadata';
+    // poster سريع لو موجود
+    if(typeof cldVidPoster === 'function'){
+      const poster = cldVidPoster(p.media_url, 480);
+      if(poster) mediaEl.poster = poster;
+    }
+  } else {
+    mediaEl = document.createElement('img');
+    mediaEl.src = p.media_url;
+    mediaEl.loading = 'eager';
+  }
+  item.appendChild(mediaEl);
+
+  // التعليق (إن وجد)
+  if(p.caption && p.caption.trim()){
+    const capEl = document.createElement('div');
+    capEl.className = 'vip-stage-caption';
+    capEl.textContent = p.caption;
+    item.appendChild(capEl);
+  }
 
   stage.appendChild(item);
 
-  // اختفاء بعد 10 ثواني (مدة معقولة قبل ما الصورة تروح)
+  // مدة الإخفاء: 10ث للصور، 65ث للفيديو (دقيقة + هامش)
+  const hideAfter = p.is_video ? 65000 : 10000;
   _vipStageTimer = setTimeout(() => {
     item.classList.add('fading');
-    setTimeout(() => item.remove(), 500);
+    setTimeout(() => {
+      if(mediaEl.tagName === 'VIDEO'){ try { mediaEl.pause(); mediaEl.src = ''; } catch(_){} }
+      item.remove();
+    }, 500);
     _vipStageTimer = null;
-  }, 10000);
+  }, hideAfter);
 }
 
 function vipAppendSys(text){
