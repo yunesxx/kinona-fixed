@@ -11,9 +11,14 @@
     const kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
     root.style.setProperty('--kb', kb + 'px');
     // ثبّت آخر رسالة بالمرأى لما يطلع/ينزل الكيبورد
-    const msgs = document.getElementById('msgs');
-    if(msgs && document.activeElement && document.activeElement.id === 'msg-input'){
-      msgs.scrollTop = msgs.scrollHeight;
+    const active = document.activeElement;
+    const activeId = active?.id || '';
+    if(activeId === 'msg-input'){
+      const msgs = document.getElementById('msgs');
+      if(msgs) msgs.scrollTop = msgs.scrollHeight;
+    } else if(activeId === 'vip-input'){
+      const vipMsgs = document.getElementById('vip-msgs');
+      if(vipMsgs) vipMsgs.scrollTop = vipMsgs.scrollHeight;
     }
   }
   function schedule(){ if(!raf) raf = requestAnimationFrame(update); }

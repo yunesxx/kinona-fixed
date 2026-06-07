@@ -402,11 +402,15 @@
 
 /* ── لوحة الشات ── */
 .vip-chat{
-  position:absolute; left:0; right:0; bottom:0; z-index:9;
+  position:absolute; left:0; right:0; z-index:9;
+  /* bottom يتبع ارتفاع الكيبورد — فإذا فُتح الكيبورد ترتفع لوحة الشات فوقه */
+  bottom: var(--kb, 0px);
   display:flex; flex-direction:column;
   height:46%;
   background:linear-gradient(180deg, transparent 0%, rgba(10,0,8,.6) 25%, rgba(10,0,8,.85) 100%);
   padding-top:30px;
+  /* انتقال ناعم بدل قفز مفاجئ */
+  transition:bottom .18s ease-out;
 }
 .vip-chat-msgs{
   flex:1; overflow-y:auto;
