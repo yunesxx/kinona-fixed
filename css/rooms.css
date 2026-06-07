@@ -196,12 +196,6 @@
 #vip-room{
   position:fixed; inset:0; z-index:8500;
   background:#0a0008; overflow:hidden;
-  /* نفس مبدأ #chat-view: flex column + padding-bottom للكيبورد
-     → المحتوى ينطبق فوق الكيبورد تلقائياً بدون JS */
-  display:none;
-  flex-direction:column;
-  padding-bottom: var(--kb, 0px);
-  box-sizing: border-box;
 }
 .vip-bg{
   position:absolute; inset:0;
@@ -407,13 +401,13 @@
 }
 
 /* ── لوحة الشات ── */
-/* تصبح flex item داخل #vip-room (لا absolute) — تأخذ آخر مكان بالعمود */
+/* تستخدم position:fixed + JS لضبط bottom حسب visual viewport بالضبط
+   → ولا فجوة، ولا حاجة لـ padding خارجي */
 .vip-chat{
-  position:relative; z-index:9;
-  margin-top:auto; /* يدفعها لأسفل الـ flex container */
+  position:fixed; left:0; right:0; bottom:0; z-index:9;
   display:flex; flex-direction:column;
   height:46%;
-  flex:0 0 auto;
+  max-height:60vh;
   background:linear-gradient(180deg, transparent 0%, rgba(10,0,8,.6) 25%, rgba(10,0,8,.85) 100%);
   padding-top:30px;
 }
@@ -459,8 +453,8 @@
 }
 
 .vip-chat-input-row{
-  display:flex; gap:8px; padding:10px 14px 14px;
-  padding-bottom:calc(14px + env(safe-area-inset-bottom, 0px));
+  display:flex; gap:8px; padding:10px 14px 12px;
+  /* لا env(safe-area) — لأنه بيخلّي فراغ تحت لما الكيبورد مفتوح */
   background:rgba(10,0,8,.6); backdrop-filter:blur(10px);
 }
 .vip-chat-input{

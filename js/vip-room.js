@@ -86,16 +86,66 @@ function vipAgeReject(){
 
 function openVipRoom(){
   document.querySelector('.bottom-nav')?.style.setProperty('display','none','important');
-  document.getElementById('vip-room').style.display = 'flex';
+  document.getElementById('vip-room').style.display = 'block';
   document.body.classList.add('vip-open');
   document.getElementById('vip-msgs').innerHTML = '';
   vipJoinChannel();
+  vipBindKbTracker();
+  vipStickChatToBottom();
+}
+
+// ══════════════════════
+// قَفل لوحة الشات لقاع الـ visual viewport (فوق الكيبورد مباشرةً)
+// ══════════════════════
+let _vipKbHandler = null;
+function vipStickChatToBottom(){
+  const chat = document.querySelector('#vip-room .vip-chat');
+  if(!chat) return;
+  const vv = window.visualViewport;
+  if(!vv){ chat.style.bottom = '0px'; return; }
+  // المسافة من قاع الـ layout لقاع الـ visual viewport = ارتفاع الكيبورد
+  const kb = Math.max(0, window.innerHeight - vv.offsetTop - vv.height);
+  chat.style.bottom = kb + 'px';
+}
+function vipBindKbTracker(){
+  if(_vipKbHandler) return;
+  const vv = window.visualViewport;
+  if(!vv) return;
+  let raf = 0;
+  _vipKbHandler = () => {
+    if(raf) return;
+    raf = requestAnimationFrame(() => {
+      raf = 0;
+      vipStickChatToBottom();
+      const m = document.getElementById('vip-msgs');
+      if(m && document.activeElement?.id === 'vip-input'){
+        m.scrollTop = m.scrollHeight;
+      }
+    });
+  };
+  vv.addEventListener('resize', _vipKbHandler);
+  vv.addEventListener('scroll', _vipKbHandler);
+  // طبّق فوراً + بعد قليل (بعض المتصفحات تأخذ ms قليلة)
+  vipStickChatToBottom();
+  setTimeout(vipStickChatToBottom, 50);
+  setTimeout(vipStickChatToBottom, 250);
+}
+function vipUnbindKbTracker(){
+  const vv = window.visualViewport;
+  if(vv && _vipKbHandler){
+    vv.removeEventListener('resize', _vipKbHandler);
+    vv.removeEventListener('scroll', _vipKbHandler);
+  }
+  _vipKbHandler = null;
 }
 
 function vipClose(){
   document.getElementById('vip-room').style.display = 'none';
   document.body.classList.remove('vip-open');
   document.querySelector('.bottom-nav')?.style.removeProperty('display');
+  vipUnbindKbTracker();
+  const chat = document.querySelector('#vip-room .vip-chat');
+  if(chat) chat.style.bottom = '';
   vipLeaveChannel();
 }
 

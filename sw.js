@@ -1,5 +1,5 @@
 // ⚡ بدّل الرقم هنا كل مرة تعمل تحديث للتطبيق
-const VERSION = 'kinona-v10-vipflex';
+const VERSION = 'kinona-v11-vipjsstick';
 
 self.addEventListener('install', e => {
   // لا تفعّل تلقائياً — انتظر حتى يضغط المستخدم "تحديث"
