@@ -1,9 +1,22 @@
 // ══════════════════════════════════════
-// VIDEO SEND — حد أقصى دقيقة + Optimistic UI + رفع بالخلفية
+// VIDEO SEND — شاشة تأكيد + حد أقصى دقيقة + Optimistic UI + رفع بالخلفية
 // ══════════════════════════════════════
 const MAX_VIDEO_DURATION = 60; // ثانية
 const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100MB (سقف معقول لدقيقة)
 
+// متغيرات لحفظ الفيديو المختار قبل التأكيد
+let pendingVidFile = null;
+let pendingVidMeta = null;
+
+// تحويل ثواني → "M:SS"
+function _fmtDur(s){
+  if(!isFinite(s)) return '0:00';
+  const m = Math.floor(s/60);
+  const sec = Math.floor(s%60).toString().padStart(2,'0');
+  return `${m}:${sec}`;
+}
+
+// مستخدم اختار فيديو — اعرض شاشة التأكيد
 async function sendVideoMsg(input){
   const file = input.files[0];
   input.value = '';
@@ -15,7 +28,7 @@ async function sendVideoMsg(input){
     return;
   }
 
-  // 2) فحص المدة — قراءة metadata قبل أي شي
+  // 2) قراءة metadata قبل الإعراض
   let meta;
   try {
     meta = await getVideoMetadata(file);
@@ -30,12 +43,56 @@ async function sendVideoMsg(input){
     return;
   }
 
+  // 3) فحص المدة قبل عرض الـ preview
   if(meta.duration > MAX_VIDEO_DURATION + 0.5){
     URL.revokeObjectURL(meta.url);
     const secs = Math.round(meta.duration);
     showToast(`الفيديو ${secs}ث — الحد الأقصى دقيقة واحدة`);
     return;
   }
+
+  // 4) خزّن المعلومات واعرض شاشة التأكيد
+  pendingVidFile = file;
+  pendingVidMeta = meta;
+
+  const preview = $('vid-confirm-preview');
+  const durLbl  = $('vid-confirm-duration');
+  preview.src = meta.url;
+  preview.muted = true;
+  preview.play().catch(()=>{}); // معاينة تشتغل تلقائياً (silent)
+  durLbl.textContent = _fmtDur(meta.duration);
+  durLbl.classList.remove('over-limit');
+
+  $('vid-confirm-caption').value = '';
+  $('vid-confirm-overlay').classList.add('show');
+}
+
+// إلغاء الإرسال
+function cancelVidSend(){
+  if(pendingVidMeta?.url) URL.revokeObjectURL(pendingVidMeta.url);
+  pendingVidFile = null;
+  pendingVidMeta = null;
+  const preview = $('vid-confirm-preview');
+  preview.pause();
+  preview.src = '';
+  $('vid-confirm-overlay').classList.remove('show');
+}
+
+// المستخدم ضغط "إرسال" — ابدأ الرفع الفعلي
+async function confirmVidSend(){
+  if(!pendingVidFile || !pendingVidMeta || !activeChat) return;
+
+  const file = pendingVidFile;
+  const meta = pendingVidMeta;
+  const caption = $('vid-confirm-caption').value.trim();
+  pendingVidFile = null;
+  pendingVidMeta = null;
+
+  // أوقف الـ preview واخفي الـ overlay فوراً
+  const preview = $('vid-confirm-preview');
+  preview.pause();
+  preview.src = '';
+  $('vid-confirm-overlay').classList.remove('show');
 
   const chatAtSend = activeChat;
 
@@ -45,7 +102,7 @@ async function sendVideoMsg(input){
     id: tempId,
     from_id: currentUser.id,
     to_id: chatAtSend.id,
-    text: '',
+    text: caption,
     msg_type: 'video',
     media_url: meta.url, // blob URL محلي
     created_at: new Date().toISOString(),
@@ -99,7 +156,7 @@ async function sendVideoMsg(input){
   const cid = [currentUser.id, chatAtSend.id].sort().join('_');
   const {data:inserted} = await sb.from('messages').insert({
     chat_id:cid, from_id:currentUser.id, to_id:chatAtSend.id,
-    text:'', msg_type:'video', media_url:mediaUrl_vid
+    text:caption, msg_type:'video', media_url:mediaUrl_vid
   }).select().single();
 
   if(inserted){

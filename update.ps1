@@ -9,9 +9,10 @@ Write-Host "===== Kinona Update =====" -ForegroundColor Cyan
 Write-Host ""
 
 # عرض التغييرات
+$changes = @(git status --short)
 git status --short
 
-if((git status --short).Count -eq 0) {
+if($changes.Count -eq 0) {
   Write-Host ""
   Write-Host "ما في تغييرات للنشر" -ForegroundColor Yellow
   exit 0

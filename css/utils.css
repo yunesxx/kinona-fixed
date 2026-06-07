@@ -235,6 +235,49 @@
 .img-confirm-cancel:active{background:rgba(255,255,255,.25);}
 .img-confirm-send:active{opacity:.85;}
 
+/* ══ VIDEO SEND CONFIRM ══ */
+#vid-confirm-overlay{
+  position:fixed;inset:0;z-index:6000;
+  background:rgba(0,0,0,.92);
+  display:none!important;
+  flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:20px;
+}
+#vid-confirm-overlay.show{display:flex!important;}
+.vid-confirm-preview-wrap{
+  position:relative;
+  max-width:100%;
+  max-height:60vh;
+  margin-bottom:24px;
+  border-radius:18px;overflow:hidden;
+  box-shadow:0 8px 40px rgba(0,0,0,.6);
+  background:#000;
+}
+.vid-confirm-preview{
+  display:block;
+  max-width:100%;
+  max-height:60vh;
+  border-radius:18px;
+  background:#000;
+}
+.vid-confirm-duration{
+  position:absolute;
+  top:12px; right:12px;
+  background:rgba(0,0,0,.65);
+  backdrop-filter:blur(6px);
+  color:#fff;
+  font-size:12px;font-weight:700;
+  padding:5px 10px;
+  border-radius:10px;
+  pointer-events:none;
+  font-family:monospace;
+  letter-spacing:.5px;
+}
+.vid-confirm-duration.over-limit{
+  background:linear-gradient(135deg,#ff416c,#ff6b35);
+}
+
 /* ══════════════════════════════════════
    LEVEL BADGE — نظام المستويات
 ══════════════════════════════════════ */

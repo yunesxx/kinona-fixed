@@ -84,6 +84,7 @@ function buildMsgBubble(msg, isOut, reactHtml){
     const url = escHtml(msg.media_url||'');
     const poster = escHtml((typeof cldVidPoster==='function') ? cldVidPoster(msg.media_url||'', 480) : '');
     const posterAttr = poster ? ` poster="${poster}"` : '';
+    const cap = msg.text ? `<div style="padding:6px 10px 2px;font-size:14px;color:${isOut?'rgba(255,255,255,.9)':'#fff'}">${escHtml(msg.text)}</div>` : '';
     return `<div class="bub media-bub" style="position:relative;padding:4px;">
       <div style="position:relative;width:220px;max-width:100%;border-radius:10px;overflow:hidden;background:#000;cursor:pointer;"
         onclick="const v=this.querySelector('video');const ic=this.querySelector('.vplay-ic');if(v.paused){v.play();ic.style.opacity='0';}else{v.pause();ic.style.opacity='1';}">
@@ -95,6 +96,7 @@ function buildMsgBubble(msg, isOut, reactHtml){
           <svg width="48" height="48" viewBox="0 0 24 24" fill="white" opacity=".9"><circle cx="12" cy="12" r="12" fill="rgba(0,0,0,.4)"/><polygon points="10,8 17,12 10,16" fill="white"/></svg>
         </div>
       </div>
+      ${cap}
       ${r}
     </div>`;
   }

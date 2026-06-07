@@ -1129,6 +1129,23 @@
   </div>
 </div>
 
+<!-- ═══ VIDEO SEND CONFIRM ═══ -->
+<div id="vid-confirm-overlay" onclick="if(event.target===this)cancelVidSend();">
+  <div class="vid-confirm-preview-wrap">
+    <video id="vid-confirm-preview" class="vid-confirm-preview" playsinline controls></video>
+    <span id="vid-confirm-duration" class="vid-confirm-duration">0:00</span>
+  </div>
+  <div class="img-confirm-caption-wrap">
+    <input class="img-confirm-caption" id="vid-confirm-caption" placeholder="أضف تعليقاً... (اختياري)" autocomplete="off">
+  </div>
+  <div class="img-confirm-btns">
+    <button class="img-confirm-cancel" onclick="cancelVidSend()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+    <button class="img-confirm-send" onclick="confirmVidSend()">
+      <span>إرسال</span> <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+    </button>
+  </div>
+</div>
+
 <!-- ═══ EDIT PROFILE MODAL ═══ -->
 <div id="edit-profile-overlay" onclick="if(event.target===this)closeEditProfile()">
   <div id="edit-profile-box">
