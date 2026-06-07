@@ -90,66 +90,16 @@ function openVipRoom(){
   document.body.classList.add('vip-open');
   document.getElementById('vip-msgs').innerHTML = '';
   vipJoinChannel();
-  vipBindKbTracker();
-  vipStickChatToBottom();
 }
 
-// ══════════════════════
-// حجم الغرفة = حجم الـ visual viewport بالضبط (المنطقة المرئية فوق الكيبورد)
-// — نقيس الغرفة كاملةً مش بس الشات، عشان ما يصير فراغ أبيض تحت
-// — يشتغل سواء المتصفح يدعم interactive-widget=resizes-content أو لا
-// ══════════════════════
-let _vipKbHandler = null;
-function vipStickChatToBottom(){
-  const room = document.getElementById('vip-room');
-  if(!room) return;
-  const vv = window.visualViewport;
-  if(!vv){ room.style.height=''; room.style.top=''; return; }
-  // ثبّت الغرفة على المنطقة المرئية تماماً: top = أعلى المرئي، height = ارتفاع المرئي
-  room.style.top    = vv.offsetTop + 'px';
-  room.style.bottom = 'auto';
-  room.style.height = vv.height + 'px';
-}
-function vipBindKbTracker(){
-  if(_vipKbHandler) return;
-  const vv = window.visualViewport;
-  if(!vv) return;
-  let raf = 0;
-  _vipKbHandler = () => {
-    if(raf) return;
-    raf = requestAnimationFrame(() => {
-      raf = 0;
-      vipStickChatToBottom();
-      const m = document.getElementById('vip-msgs');
-      if(m && document.activeElement?.id === 'vip-input'){
-        m.scrollTop = m.scrollHeight;
-      }
-    });
-  };
-  vv.addEventListener('resize', _vipKbHandler);
-  vv.addEventListener('scroll', _vipKbHandler);
-
-  // طبّق فوراً + بعد قليل (بعض المتصفحات تأخذ ms قليلة لتحديث الأبعاد)
-  vipStickChatToBottom();
-  setTimeout(vipStickChatToBottom, 50);
-  setTimeout(vipStickChatToBottom, 250);
-}
-function vipUnbindKbTracker(){
-  const vv = window.visualViewport;
-  if(vv && _vipKbHandler){
-    vv.removeEventListener('resize', _vipKbHandler);
-    vv.removeEventListener('scroll', _vipKbHandler);
-  }
-  _vipKbHandler = null;
-}
+// ملاحظة: ما عاد في تتبّع للكيبورد بالـJS.
+// الغرفة صارت flex column (مثل الغرفة العادية) فالمتصفح بيعيد ترتيب
+// لوحة الشات فوق الكيبورد تلقائياً عبر interactive-widget=resizes-content.
 
 function vipClose(){
   document.getElementById('vip-room').style.display = 'none';
   document.body.classList.remove('vip-open');
   document.querySelector('.bottom-nav')?.style.removeProperty('display');
-  vipUnbindKbTracker();
-  const room = document.getElementById('vip-room');
-  if(room){ room.style.height=''; room.style.top=''; room.style.bottom=''; }
   vipLeaveChannel();
 }
 

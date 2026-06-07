@@ -196,6 +196,7 @@
 #vip-room{
   position:fixed; inset:0; z-index:8500;
   background:#0a0008; overflow:hidden;
+  display:flex; flex-direction:column;
 }
 .vip-bg{
   position:absolute; inset:0;
@@ -404,8 +405,10 @@
 /* تستخدم position:fixed + JS لضبط bottom حسب visual viewport بالضبط
    → ولا فجوة، ولا حاجة لـ padding خارجي */
 .vip-chat{
-  position:absolute; left:0; right:0; bottom:0; z-index:9;
+  position:relative; z-index:9;
+  margin-top:auto;            /* يدفعه لقاع عمود الغرفة (فوق الكيبورد لما يفتح) */
   display:flex; flex-direction:column;
+  flex-shrink:0;
   height:46%;
   max-height:60vh;
   background:linear-gradient(180deg, transparent 0%, rgba(10,0,8,.6) 25%, rgba(10,0,8,.85) 100%);
