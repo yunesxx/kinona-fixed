@@ -3,6 +3,70 @@ const CLD_CLOUD  = 'dzzwjhy8p';
 const CLD_PRESET = 'kinona';
 const CLD_BASE   = `https://api.cloudinary.com/v1_1/${CLD_CLOUD}`;
 
+// ══════════════════════════════════════
+// ضغط الصور قبل الرفع — يقلل الحجم 80-95% بدون فقد جودة ملحوظ
+// صورة iPhone 4MB → ~300-500KB
+// maxDim: أقصى بُعد (عرض أو طول). 1920 = جودة عالية ممتازة للموبايل والديسكتوب
+// quality: 0.85 = توازن مثالي بين الجودة والحجم
+// ══════════════════════════════════════
+async function compressImage(file, maxDim = 1920, quality = 0.85){
+  // لو مش صورة، أو GIF (بفقد الحركة)، أو SVG — رجّعها كما هي
+  if(!file || !file.type) return file;
+  if(!file.type.startsWith('image/')) return file;
+  if(file.type === 'image/gif' || file.type === 'image/svg+xml') return file;
+  // لو حجمها صغير أصلاً (<300KB) — ما في داعي للضغط
+  if(file.size < 300 * 1024) return file;
+
+  try {
+    // اقرأ الصورة (بدعم HEIC من iPhone عبر createImageBitmap لو متاح)
+    let bitmap;
+    if(typeof createImageBitmap === 'function'){
+      try { bitmap = await createImageBitmap(file); }
+      catch(_){ bitmap = null; }
+    }
+    if(!bitmap){
+      // fallback: عبر FileReader + Image
+      const dataUrl = await new Promise((res, rej) => {
+        const fr = new FileReader();
+        fr.onload = () => res(fr.result);
+        fr.onerror = rej;
+        fr.readAsDataURL(file);
+      });
+      bitmap = await new Promise((res, rej) => {
+        const img = new Image();
+        img.onload = () => res(img);
+        img.onerror = rej;
+        img.src = dataUrl;
+      });
+    }
+
+    const w0 = bitmap.width || bitmap.naturalWidth;
+    const h0 = bitmap.height || bitmap.naturalHeight;
+    const ratio = Math.min(1, maxDim / Math.max(w0, h0));
+    const w = Math.round(w0 * ratio);
+    const h = Math.round(h0 * ratio);
+
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(bitmap, 0, 0, w, h);
+    if(bitmap.close) bitmap.close();
+
+    const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', quality));
+    if(!blob) return file;
+    // لو الضغط ما وفّر شي (مثلاً JPEG مضغوط أصلاً) — رجّع الأصلي
+    if(blob.size >= file.size * 0.95) return file;
+
+    // اسم نظيف بامتداد jpg
+    const name = (file.name || 'image').replace(/\.[^.]+$/, '') + '.jpg';
+    return new File([blob], name, { type: 'image/jpeg', lastModified: Date.now() });
+  } catch(e){
+    console.warn('[compressImage] failed, using original:', e?.message);
+    return file;
+  }
+}
+
 // رفع ملف لـ Cloudinary مع تتبع progress
 // resourceType: 'auto' (افتراضي) | 'image' | 'video' | 'raw'
 async function cldUpload(file, onProgress, resourceType) {

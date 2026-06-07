@@ -93,35 +93,91 @@ function cancelImgSend(){
 async function confirmImgSend(){
   if(!pendingImgFile || !activeChat) return;
   const caption = $('img-confirm-caption').value.trim();
-  const file = pendingImgFile;
+  let file = pendingImgFile;
   pendingImgFile = null;
+  const chatAtSend = activeChat; // قد يفتح المستخدم محادثة ثانية أثناء الرفع
 
-  // أغلق شاشة التأكيد فوراً
+  // أغلق شاشة التأكيد فوراً — بدون loader يحجب الواجهة
   $('img-confirm-overlay').classList.remove('show');
-  showLoader('جارٍ إرسال الصورة...');
 
-  // رفع لـ Cloudinary
+  // 1) Optimistic UI: اعرض الصورة فوراً بـ blob URL محلي
+  const localUrl = URL.createObjectURL(file);
+  const tempId = 'tmp_img_' + Date.now();
+  const tempMsg = {
+    id: tempId,
+    from_id: currentUser.id,
+    to_id: chatAtSend.id,
+    text: caption,
+    msg_type: 'image',
+    media_url: localUrl,
+    created_at: new Date().toISOString(),
+    _pending: true
+  };
+  appendMessage(tempMsg, true);
+  // علامة "جاري الرفع" — overlay شفاف فوق الصورة
+  const tmpRow = $('msgs')?.querySelector(`[data-id="${tempId}"]`);
+  if(tmpRow){
+    const bub = tmpRow.querySelector('.media-bub');
+    if(bub){
+      const badge = document.createElement('div');
+      badge.className = 'msg-uploading-badge';
+      badge.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.35);border-radius:inherit;color:#fff;font-size:12px;font-weight:700;pointer-events:none;backdrop-filter:blur(2px);';
+      badge.innerHTML = '<span style="background:rgba(0,0,0,.55);padding:6px 12px;border-radius:12px;">⏳ جارٍ الرفع…</span>';
+      bub.appendChild(badge);
+    }
+  }
+
+  // 2) ضغط الصورة قبل الرفع (يقلل الحجم 80-90%)
+  try { file = await compressImage(file, 1920, 0.85); }
+  catch(_){ /* استخدم الأصلية لو فشل الضغط */ }
+
+  // 3) رفع لـ Cloudinary بالخلفية
   let _cldImg;
   try {
     _cldImg = await cldUpload(file);
   } catch(e) {
-    hideLoader();
+    URL.revokeObjectURL(localUrl);
+    tmpRow?.remove();
     showToast('فشل الرفع');
     return;
   }
-  // 1600px عرض كحد أقصى — يكفي شاشات Retina/AMOLED بدون اتلاف الباندويث
-  const mediaUrl_img = cldImg(_cldImg.secure_url, 1600);
-  const cid = [currentUser.id, activeChat.id].sort().join('_');
+
+  // 900px عرض كافٍ للدردشة (مع dpr_auto بيطلع 1800px لشاشات retina تلقائياً)
+  const mediaUrl_img = cldImg(_cldImg.secure_url, 900);
+  const cid = [currentUser.id, chatAtSend.id].sort().join('_');
   const {data:inserted} = await sb.from('messages').insert({
-    chat_id:cid, from_id:currentUser.id, to_id:activeChat.id,
+    chat_id:cid, from_id:currentUser.id, to_id:chatAtSend.id,
     text: caption, msg_type:'image', media_url:mediaUrl_img
   }).select().single();
-  hideLoader();
+
   if(inserted){
-    appendMessage(inserted, true);
-    bumpChatToTop(activeChat.id, '🖼️ صورة');
+    // بدّل الصورة المؤقتة بالحقيقية (نفس المكان، بدون animation أو scroll)
+    if(tmpRow){
+      tmpRow.dataset.id = inserted.id;
+      const img = tmpRow.querySelector('img.msg-img');
+      if(img){
+        // غيّر الـ src للـ Cloudinary URL
+        img.onload = () => URL.revokeObjectURL(localUrl);
+        img.src = mediaUrl_img;
+        // عدّل onclick عشان يفتح الصورة الكاملة (مش الـ blob)
+        img.setAttribute('onclick', `openImgFull('${mediaUrl_img}')`);
+      } else {
+        URL.revokeObjectURL(localUrl);
+      }
+      // شيل overlay "جاري الرفع"
+      tmpRow.querySelector('.msg-uploading-badge')?.remove();
+    } else {
+      appendMessage(inserted, true);
+      URL.revokeObjectURL(localUrl);
+    }
+    bumpChatToTop(chatAtSend.id, '🖼️ صورة');
     if(msgChannel) msgChannel.send({type:'broadcast',event:'new_msg',payload:{from:currentUser.id, msg:inserted}});
-    broadcastToInbox(activeChat.id, inserted);
+    broadcastToInbox(chatAtSend.id, inserted);
+  } else {
+    // فشل insert
+    URL.revokeObjectURL(localUrl);
+    tmpRow?.remove();
+    showToast('فشل الإرسال');
   }
 }
 

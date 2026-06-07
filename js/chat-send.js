@@ -170,17 +170,16 @@ async function sendMessage(){
     broadcastToInbox(activeChat.id, inserted);
     sendOSPush(activeChat.id, `💬 ${currentProfile?.username || 'kinona'}`, inserted.text || '📷 رسالة جديدة');
 
-    // ── زيادة عداد الرسائل + XP ──────────
-    try {
-      const newMsgCount = (currentProfile?.messages_sent || 0) + 1;
-      await sb.from('profiles')
-        .update({ messages_sent: newMsgCount })
-        .eq('id', currentUser.id);
-      if(currentProfile) currentProfile.messages_sent = newMsgCount;
-      // تحديث الـ cache عشان getLevelInfo يشتغل صح
-      if(typeof _statsCache !== 'undefined' && _statsCache[currentUser.id])
-        _statsCache[currentUser.id].msgs = newMsgCount;
-    } catch(e){ console.error('messages_sent update:', e); }
+    // ── زيادة عداد الرسائل + XP — بدون await (fire-and-forget) ──
+    // ما في داعي ننتظر التحديث لأنه ما بظهر للمستخدم
+    const newMsgCount = (currentProfile?.messages_sent || 0) + 1;
+    if(currentProfile) currentProfile.messages_sent = newMsgCount;
+    if(typeof _statsCache !== 'undefined' && _statsCache[currentUser.id])
+      _statsCache[currentUser.id].msgs = newMsgCount;
+    sb.from('profiles')
+      .update({ messages_sent: newMsgCount })
+      .eq('id', currentUser.id)
+      .then(({error}) => { if(error) console.error('messages_sent update:', error); });
     // XP عن إرسال رسالة (عبر addXP في level.js)
     if(typeof addXP === 'function') addXP('message');
   }
