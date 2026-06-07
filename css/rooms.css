@@ -196,6 +196,10 @@
 #vip-room{
   position:fixed; inset:0; z-index:8500;
   background:#0a0008; overflow:hidden;
+  /* نفس مبدأ #chat-view: الكيبورد يدفع المحتوى لفوق بـ padding بدل
+     ما يقلّص الإطار، فالخلفية تضل ممتدة لتحت بدون فراغ أبيض */
+  padding-bottom: var(--kb, 0px);
+  box-sizing: border-box;
 }
 .vip-bg{
   position:absolute; inset:0;
@@ -402,16 +406,14 @@
 
 /* ── لوحة الشات ── */
 .vip-chat{
-  position:absolute; left:0; right:0; z-index:9;
-  /* bottom يتم تعيينه بـ JS (positionVipChat) ليطابق ارتفاع الكيبورد بدقّة */
-  bottom: 0;
+  /* fixed مهم: ع iOS وبعض متصفحات الأندرويد، fixed بـ bottom:0 بيلصق
+     لقاع الـ visual viewport (فوق الكيبورد) بدون أي JS */
+  position:fixed; left:0; right:0; bottom:0; z-index:9;
   display:flex; flex-direction:column;
   height:46%;
-  max-height:calc(100dvh - 60px); /* تجنّب الانهيار لو الـ viewport صغير */
+  max-height:60vh;
   background:linear-gradient(180deg, transparent 0%, rgba(10,0,8,.6) 25%, rgba(10,0,8,.85) 100%);
   padding-top:30px;
-  /* انتقال ناعم بدل قفز مفاجئ */
-  transition:bottom .15s ease-out;
 }
 .vip-chat-msgs{
   flex:1; overflow-y:auto;

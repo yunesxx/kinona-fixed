@@ -89,61 +89,11 @@ function openVipRoom(){
   document.getElementById('vip-room').style.display = 'block';
   document.getElementById('vip-msgs').innerHTML = '';
   vipJoinChannel();
-  vipBindViewportTracker();
-  positionVipChat();
-}
-
-// ══════════════════════
-// ترتيب موقع لوحة الشات لتظل ملاصقة لقمة الكيبورد (مهم لـ iOS وبعض متصفحات الأندرويد)
-// ══════════════════════
-let _vipVVHandler = null;
-function positionVipChat(){
-  const chat = document.querySelector('#vip-room .vip-chat');
-  if(!chat) return;
-  const vv = window.visualViewport;
-  if(!vv){ chat.style.bottom = '0px'; return; }
-  // المسافة من أسفل الـ layout viewport لأسفل الـ visual viewport
-  // = ارتفاع الكيبورد (لو فاتح)
-  const gap = Math.max(0, window.innerHeight - (vv.offsetTop + vv.height));
-  chat.style.bottom = gap + 'px';
-}
-function vipBindViewportTracker(){
-  if(_vipVVHandler) return;
-  const vv = window.visualViewport;
-  if(!vv) return;
-  let raf = 0;
-  _vipVVHandler = () => {
-    if(raf) return;
-    raf = requestAnimationFrame(() => {
-      raf = 0;
-      positionVipChat();
-      // ثبّت آخر رسالة بالمرأى
-      const m = document.getElementById('vip-msgs');
-      if(m && document.activeElement?.id === 'vip-input'){
-        m.scrollTop = m.scrollHeight;
-      }
-    });
-  };
-  vv.addEventListener('resize', _vipVVHandler);
-  vv.addEventListener('scroll', _vipVVHandler);
-}
-function vipUnbindViewportTracker(){
-  if(!_vipVVHandler) return;
-  const vv = window.visualViewport;
-  if(vv){
-    vv.removeEventListener('resize', _vipVVHandler);
-    vv.removeEventListener('scroll', _vipVVHandler);
-  }
-  _vipVVHandler = null;
 }
 
 function vipClose(){
   document.getElementById('vip-room').style.display = 'none';
   document.querySelector('.bottom-nav')?.style.removeProperty('display');
-  vipUnbindViewportTracker();
-  // ارجع لوحة الشات لمكانها الافتراضي
-  const chat = document.querySelector('#vip-room .vip-chat');
-  if(chat) chat.style.bottom = '';
   vipLeaveChannel();
 }
 

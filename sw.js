@@ -1,5 +1,5 @@
 // ⚡ بدّل الرقم هنا كل مرة تعمل تحديث للتطبيق
-const VERSION = 'kinona-v8-vipkbjs';
+const VERSION = 'kinona-v9-vipkbcss';
 
 self.addEventListener('install', e => {
   // لا تفعّل تلقائياً — انتظر حتى يضغط المستخدم "تحديث"
