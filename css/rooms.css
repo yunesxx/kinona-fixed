@@ -467,7 +467,7 @@
 /* صف الإدخال داخل VIP يعتمد على .cinput/.iwrap من chat.css (نفس الشات الأصلي).
    لا حاجة لـ env(safe-area-inset-bottom): --kb يغطي الكيبورد، وبدون كيبورد
    الـ .vip-chat تنتهي قبل الـ safe-area الطبيعي للنظام. */
-.vip-chat .cinput{ padding:6px 12px 10px; }
+.vip-chat .cinput{ padding:6px 12px; }
 .vip-chat .iwrap{
   background:rgba(255,255,255,.08);
   border-color:rgba(255,20,147,.2);

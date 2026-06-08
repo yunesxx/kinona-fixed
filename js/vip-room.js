@@ -230,17 +230,18 @@ function vipUploadMedia(input){
 
   _vipPendingImgFile = file;
 
-  // معاينة الصورة بشاشة التأكيد
-  const reader = new FileReader();
-  reader.onload = e => {
-    const prev = document.getElementById('vip-img-confirm-preview');
-    if(prev) prev.src = e.target.result;
-    const cap = document.getElementById('vip-img-confirm-caption');
-    if(cap) cap.value = '';
-    document.getElementById('vip-img-confirm-overlay')?.classList.add('show');
-    setTimeout(() => cap?.focus(), 300);
-  };
-  reader.readAsDataURL(file);
+  // معاينة فورية عبر blob URL (بدل FileReader اللي بيعلّق على الصور الكبيرة)
+  const prev = document.getElementById('vip-img-confirm-preview');
+  if(prev){
+    if(prev.dataset.blobUrl){ try{ URL.revokeObjectURL(prev.dataset.blobUrl); }catch(_){} }
+    const u = URL.createObjectURL(file);
+    prev.src = u;
+    prev.dataset.blobUrl = u;
+  }
+  const cap = document.getElementById('vip-img-confirm-caption');
+  if(cap) cap.value = '';
+  document.getElementById('vip-img-confirm-overlay')?.classList.add('show');
+  setTimeout(() => cap?.focus(), 300);
 }
 
 function vipCancelImgSend(){
@@ -248,7 +249,10 @@ function vipCancelImgSend(){
   const ov = document.getElementById('vip-img-confirm-overlay');
   if(ov) ov.classList.remove('show');
   const prev = document.getElementById('vip-img-confirm-preview');
-  if(prev) prev.src = '';
+  if(prev){
+    if(prev.dataset.blobUrl){ try{ URL.revokeObjectURL(prev.dataset.blobUrl); }catch(_){} delete prev.dataset.blobUrl; }
+    prev.src = '';
+  }
 }
 
 async function vipConfirmImgSend(){
@@ -257,8 +261,10 @@ async function vipConfirmImgSend(){
   _vipPendingImgFile = null;
   const caption = document.getElementById('vip-img-confirm-caption')?.value.trim() || '';
 
-  // أغلق الـ overlay فوراً
+  // أغلق الـ overlay فوراً + حرّر blob URL للمعاينة
   document.getElementById('vip-img-confirm-overlay')?.classList.remove('show');
+  const prev = document.getElementById('vip-img-confirm-preview');
+  if(prev?.dataset.blobUrl){ try{ URL.revokeObjectURL(prev.dataset.blobUrl); }catch(_){} delete prev.dataset.blobUrl; }
 
   // ضغط الصورة قبل الرفع (إلا GIF نخليه كما هو)
   const isGif = file.type === 'image/gif';
