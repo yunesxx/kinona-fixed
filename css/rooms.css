@@ -401,10 +401,11 @@
 }
 
 /* ── لوحة الشات ── */
-/* تستخدم position:fixed + JS لضبط bottom حسب visual viewport بالضبط
-   → ولا فجوة، ولا حاجة لـ padding خارجي */
+/* نفس آلية الشات الأصلي #chat-view:
+   --kb يتعيّن في :root من utils.js (visualViewport) عند فتح الكيبورد،
+   ونحرّك اللوحة فوقه عبر bottom:var(--kb) — بدون JS خاص بالـ VIP. */
 .vip-chat{
-  position:absolute; left:0; right:0; bottom:0; z-index:9;
+  position:absolute; left:0; right:0; bottom:var(--kb, 0px); z-index:9;
   display:flex; flex-direction:column;
   height:46%;
   max-height:60vh;
@@ -452,33 +453,23 @@
   padding:4px 0;
 }
 
-.vip-chat-input-row{
-  display:flex; gap:8px; padding:10px 14px 12px;
-  /* لا env(safe-area) — لأنه بيخلّي فراغ تحت لما الكيبورد مفتوح */
-  background:rgba(10,0,8,.6); backdrop-filter:blur(10px);
-}
-.vip-chat-input{
-  flex:1; padding:12px 16px; border-radius:22px;
+/* صف الإدخال داخل VIP يعتمد على .cinput/.iwrap من chat.css (نفس الشات الأصلي).
+   لا حاجة لـ env(safe-area-inset-bottom): --kb يغطي الكيبورد، وبدون كيبورد
+   الـ .vip-chat تنتهي قبل الـ safe-area الطبيعي للنظام. */
+.vip-chat .cinput{ padding:6px 12px 10px; }
+.vip-chat .iwrap{
   background:rgba(255,255,255,.08);
-  border:1px solid rgba(255,20,147,.2); color:#fff;
-  font-size:14px; outline:none;
+  border-color:rgba(255,20,147,.2);
 }
-.vip-chat-input::placeholder{ color:rgba(255,255,255,.4); }
-.vip-chat-input:focus{ border-color:#ff1493; }
-.vip-send-btn, .vip-media-btn{
-  width:44px; height:44px; border-radius:50%; border:none;
-  cursor:pointer; flex-shrink:0;
-  display:flex; align-items:center; justify-content:center;
+.vip-chat .iwrap:focus-within{ border-color:#ff1493; background:rgba(255,255,255,.1); }
+.vip-chat .iicon-cam{
+  background:linear-gradient(135deg,#ff1493,#c71585) !important;
+  box-shadow:0 3px 10px rgba(255,20,147,.4);
 }
-.vip-send-btn{
-  background:linear-gradient(135deg,#ff1493,#c71585); color:#fff;
+.vip-chat .sbtn{
+  background:linear-gradient(135deg,#ff1493,#c71585);
   box-shadow:0 4px 14px rgba(255,20,147,.4);
 }
-.vip-media-btn{
-  background:rgba(255,255,255,.1);
-  border:1px solid rgba(255,20,147,.25);
-}
-.vip-send-btn:active, .vip-media-btn:active{ transform:scale(.94); }
 
 /* ── منصة الوسائط: تظهر بنص الشاشة كاملة ── */
 .vip-media-stage{

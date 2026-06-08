@@ -460,10 +460,6 @@
 
   <!-- شريط التفاعلات السريعة -->
   <div class="vip-reactions">
-    <button class="vip-react-btn" onclick="vipSendReaction('🔥')">🔥</button>
-    <button class="vip-react-btn" onclick="vipSendReaction('💋')">💋</button>
-    <button class="vip-react-btn" onclick="vipSendReaction('❤️‍🔥')">❤️‍🔥</button>
-    <button class="vip-react-btn" onclick="vipSendReaction('🌹')">🌹</button>
     <button class="vip-react-btn" onclick="vipSendReaction('🍷')">🍷</button>
     <button class="vip-react-btn" onclick="vipSendReaction('😈')">😈</button>
   </div>
@@ -477,22 +473,28 @@
   <!-- لوحة الشات -->
   <div class="vip-chat">
     <div class="vip-chat-msgs" id="vip-msgs"></div>
-    <div class="vip-chat-input-row">
-      <input id="vip-file" type="file" accept="image/*,image/gif" style="display:none" onchange="vipUploadMedia(this)">
-      <input id="vip-vidfile" type="file" accept="video/*" style="display:none" onchange="vipUploadVideo(this)">
-      <button class="vip-media-btn" onclick="document.getElementById('vip-file').click()" title="صورة/GIF">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-      </button>
-      <button class="vip-media-btn" onclick="document.getElementById('vip-vidfile').click()" title="فيديو">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8z"/><rect width="14" height="12" x="2" y="6" rx="2"/></svg>
-      </button>
-      <input id="vip-input" class="vip-chat-input" type="text" placeholder="اكتب رسالة..." maxlength="300"
-        autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false"
-        name="vip-msg-nofill" data-form-type="other" enterkeyhint="send"
-        onkeydown="if(event.key==='Enter')vipSendMsg()">
-      <button class="vip-send-btn" onclick="vipSendMsg()" title="إرسال">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-      </button>
+    <input id="vip-file" type="file" accept="image/*,image/gif" style="display:none" onchange="vipUploadMedia(this)">
+    <input id="vip-vidfile" type="file" accept="video/*" style="display:none" onchange="vipUploadVideo(this)">
+    <div class="cinput" onclick="event.stopPropagation()">
+      <div class="iwrap" id="vip-iwrap">
+        <div class="iwrap-right-icons">
+          <button class="iicon-btn iicon-cam" onclick="document.getElementById('vip-file').click()" title="صورة/GIF">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+          </button>
+          <button class="iicon-btn" onclick="document.getElementById('vip-vidfile').click()" title="فيديو">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8z"/><rect width="14" height="12" x="2" y="6" rx="2"/></svg>
+          </button>
+        </div>
+        <input type="search" id="vip-input" placeholder="اكتب رسالة..." maxlength="300"
+          autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+          inputmode="text" enterkeyhint="send" name="kinona-vip-msg"
+          data-lpignore="true" data-form-type="other" data-1p-ignore="true"
+          onkeydown="if(event.key==='Enter')vipSendMsg()"
+          oninput="const b=document.getElementById('vip-send-btn');b.classList.toggle('hidden',!this.value.trim());">
+        <button class="sbtn hidden" id="vip-send-btn" onclick="vipSendMsg()" title="إرسال">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+        </button>
+      </div>
     </div>
   </div>
 </div>
