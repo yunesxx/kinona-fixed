@@ -4,6 +4,8 @@
   display:none;align-items:flex-end;justify-content:center;
   background:rgba(0,0,0,.5);
 }
+/* فوق VIP room (z-index 8500) */
+body.vip-open .sticker-overlay{ z-index:9000; }
 .sticker-overlay.show{display:flex;}
 .sticker-box{
   background:#1c1c1e;width:100%;max-width:520px;

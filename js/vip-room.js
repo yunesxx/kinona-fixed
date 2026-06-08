@@ -115,8 +115,9 @@ function vipJoinChannel(){
   })
   .on('broadcast', {event:'vip_msg'}, ({payload}) => {
     if(!payload?.uid || payload.uid === currentUser.id) return;
-    if(payload.media_url) vipRenderMedia(payload, false);
-    else vipRenderMsg(payload, false);
+    if(payload.is_sticker)         vipRenderSticker(payload, false);
+    else if(payload.media_url)     vipRenderMedia(payload, false);
+    else                            vipRenderMsg(payload, false);
     vipBumpActivity(payload.media_url ? 2 : 1);
   })
   .on('broadcast', {event:'vip_react'}, ({payload}) => {
@@ -212,6 +213,93 @@ function vipSendMsg(){
   vipRenderMsg(payload, true);
   vipChannel?.send({type:'broadcast', event:'vip_msg', payload});
   vipBumpActivity();
+}
+
+// ══════════════════════
+// ستيكر / GIF — نعيد استخدام منتقي المحادثة العام مع تحويل
+// الإرسال إلى قناة VIP بدل قاعدة البيانات
+// ══════════════════════
+let _vipPickerSavedEmoji = null;
+let _vipPickerSavedImg   = null;
+function vipOpenStickerPicker(){
+  if(typeof openStickerPicker !== 'function') return;
+  // احفظ الدوال الأصلية وحوّلها إلى نسخ VIP
+  _vipPickerSavedEmoji = window.sendSticker;
+  _vipPickerSavedImg   = window.sendImgSticker;
+  window.sendSticker    = vipSendSticker;
+  window.sendImgSticker = vipSendImgSticker;
+  openStickerPicker();
+  // راقب إغلاق المنتقي لاسترجاع الدوال
+  const ov = document.getElementById('sticker-overlay');
+  if(ov){
+    const obs = new MutationObserver(() => {
+      if(!ov.classList.contains('show')){
+        if(_vipPickerSavedEmoji) window.sendSticker    = _vipPickerSavedEmoji;
+        if(_vipPickerSavedImg)   window.sendImgSticker = _vipPickerSavedImg;
+        _vipPickerSavedEmoji = _vipPickerSavedImg = null;
+        obs.disconnect();
+      }
+    });
+    obs.observe(ov, { attributes:true, attributeFilter:['class'] });
+  }
+}
+
+function vipSendSticker(emoji){
+  if(typeof closeStickerPicker === 'function') closeStickerPicker();
+  const payload = {
+    uid: currentUser.id,
+    username: currentProfile?.username || 'guest',
+    avatar_url: currentProfile?.avatar_url || null,
+    text: emoji, is_sticker: true, ts: Date.now()
+  };
+  vipRenderSticker(payload, true);
+  vipChannel?.send({type:'broadcast', event:'vip_msg', payload});
+  vipBumpActivity();
+}
+
+function vipSendImgSticker(url){
+  if(typeof closeStickerPicker === 'function') closeStickerPicker();
+  const payload = {
+    uid: currentUser.id,
+    username: currentProfile?.username || 'guest',
+    avatar_url: currentProfile?.avatar_url || null,
+    media_url: url, is_img_sticker: true, ts: Date.now()
+  };
+  vipRenderMedia(payload, true);
+  vipChannel?.send({type:'broadcast', event:'vip_msg', payload});
+  vipBumpActivity();
+}
+
+function vipRenderSticker(p, isMine){
+  const msgs = document.getElementById('vip-msgs');
+  if(!msgs) return;
+  const wrap = document.createElement('div');
+  wrap.className = 'vip-msg ' + (isMine ? 'mine' : '');
+
+  const av = document.createElement('div');
+  av.className = 'vip-msg-av';
+  av.innerHTML = p.avatar_url
+    ? '<img src="'+escHtml(p.avatar_url)+'" loading="lazy">'
+    : (p.username||'?')[0].toUpperCase();
+
+  const body = document.createElement('div');
+  body.className = 'vip-msg-body';
+  if(!isMine){
+    const name = document.createElement('div');
+    name.className = 'vip-msg-name';
+    name.textContent = p.username || '?';
+    body.appendChild(name);
+  }
+  const big = document.createElement('div');
+  big.className = 'vip-msg-sticker';
+  big.textContent = p.text;
+  body.appendChild(big);
+
+  wrap.appendChild(av);
+  wrap.appendChild(body);
+  msgs.appendChild(wrap);
+  while(msgs.children.length > 80) msgs.removeChild(msgs.firstChild);
+  msgs.scrollTop = msgs.scrollHeight;
 }
 
 // ══════════════════════

@@ -509,6 +509,11 @@
   font-size:13px; color:#fff; padding:6px 8px 4px;
   word-wrap:break-word; line-height:1.4;
 }
+/* ستيكر إيموجي كبير بدون فقاعة */
+.vip-msg-sticker{
+  font-size:54px; line-height:1; padding:2px 6px;
+  filter:drop-shadow(0 3px 6px rgba(0,0,0,.45));
+}
 
 /* صف الإدخال داخل VIP يعتمد على .cinput/.iwrap من chat.css (نفس الشات الأصلي).
    لا حاجة لـ env(safe-area-inset-bottom): --kb يغطي الكيبورد، وبدون كيبورد
