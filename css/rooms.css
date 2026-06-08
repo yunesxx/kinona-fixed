@@ -293,14 +293,15 @@
 .vip-pillow-l{ left:6%; transform:rotate(-4deg); }
 .vip-pillow-r{ right:6%; transform:rotate(4deg); }
 
-/* ثنائي أنمي على السرير — SVG كامل الجسم */
-.vip-couple-svg{
+/* ثنائي على السرير — صورة */
+.vip-couple-img{
   position:absolute;
   left:8%; right:8%; width:84%;
-  top:24%; height:60%;
+  top:18%; height:70%;
   z-index:3;
+  object-fit:contain;
   pointer-events:none;
-  filter:drop-shadow(0 4px 10px rgba(0,0,0,.55));
+  filter:drop-shadow(0 6px 14px rgba(0,0,0,.6));
   animation:vipCoupleSway 6s ease-in-out infinite;
 }
 @keyframes vipCoupleSway{
