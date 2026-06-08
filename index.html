@@ -433,15 +433,89 @@
       <div class="vip-bed-mattress"></div>
       <div class="vip-pillow vip-pillow-l"></div>
       <div class="vip-pillow vip-pillow-r"></div>
-      <!-- الثنائي على السرير -->
-      <div class="vip-couple vip-couple-m" aria-hidden="true">
-        <div class="vip-couple-hair"></div>
-        <div class="vip-couple-face"></div>
-      </div>
-      <div class="vip-couple vip-couple-w" aria-hidden="true">
-        <div class="vip-couple-hair"></div>
-        <div class="vip-couple-face"></div>
-      </div>
+      <!-- الثنائي على السرير — أنمي SVG -->
+      <svg class="vip-couple-svg" viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs>
+          <linearGradient id="vipSkinM" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stop-color="#f4cba0"/>
+            <stop offset="100%" stop-color="#d9a574"/>
+          </linearGradient>
+          <linearGradient id="vipSkinW" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stop-color="#fde0c4"/>
+            <stop offset="100%" stop-color="#eec19a"/>
+          </linearGradient>
+          <linearGradient id="vipHairM" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stop-color="#2a1810"/>
+            <stop offset="100%" stop-color="#1a0f08"/>
+          </linearGradient>
+          <linearGradient id="vipHairW" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stop-color="#5a2418"/>
+            <stop offset="100%" stop-color="#3a140a"/>
+          </linearGradient>
+          <linearGradient id="vipRobeM" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stop-color="#3a4a6a"/>
+            <stop offset="100%" stop-color="#1a2238"/>
+          </linearGradient>
+          <linearGradient id="vipRobeW" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stop-color="#c41858"/>
+            <stop offset="100%" stop-color="#7a0832"/>
+          </linearGradient>
+        </defs>
+
+        <!-- الرجل (يسار) -->
+        <g transform="translate(58,18) rotate(-4)">
+          <!-- ذراع يمين ملتفّة حولها -->
+          <path d="M22 60 Q40 64 60 60 Q62 70 48 76 Q30 76 22 70 Z" fill="url(#vipRobeM)" opacity=".95"/>
+          <!-- جسم/روب -->
+          <path d="M2 50 Q14 42 30 42 Q46 42 58 50 L58 100 Q30 110 2 100 Z" fill="url(#vipRobeM)"/>
+          <!-- ياقة V -->
+          <path d="M22 42 L30 56 L38 42 Z" fill="url(#vipSkinM)" opacity=".7"/>
+          <!-- رقبة -->
+          <rect x="24" y="34" width="12" height="10" fill="url(#vipSkinM)"/>
+          <!-- وجه -->
+          <ellipse cx="30" cy="22" rx="14" ry="16" fill="url(#vipSkinM)"/>
+          <!-- شعر -->
+          <path d="M14 18 Q14 4 30 4 Q46 4 46 20 Q42 12 32 11 Q22 12 20 18 Q18 22 14 22 Z" fill="url(#vipHairM)"/>
+          <!-- عيون -->
+          <ellipse cx="24" cy="24" rx="1.6" ry="2.2" fill="#1a0a05"/>
+          <ellipse cx="36" cy="24" rx="1.6" ry="2.2" fill="#1a0a05"/>
+          <!-- ابتسامة -->
+          <path d="M26 30 Q30 32 34 30" stroke="#5a2010" stroke-width="1" fill="none" stroke-linecap="round"/>
+        </g>
+
+        <!-- المرأة (يمين) -->
+        <g transform="translate(120,18) rotate(4)">
+          <!-- شعر طويل خلفي -->
+          <path d="M6 20 Q4 50 10 80 Q18 96 30 98 Q42 96 50 80 Q56 50 54 20 Q40 8 30 8 Q20 8 6 20 Z" fill="url(#vipHairW)"/>
+          <!-- جسم/فستان -->
+          <path d="M4 52 Q14 44 30 44 Q46 44 56 52 L58 100 Q30 110 2 100 Z" fill="url(#vipRobeW)"/>
+          <!-- ياقة -->
+          <path d="M22 44 Q30 52 38 44" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="1"/>
+          <!-- رقبة -->
+          <rect x="25" y="35" width="10" height="10" fill="url(#vipSkinW)"/>
+          <!-- وجه -->
+          <ellipse cx="30" cy="22" rx="13" ry="15" fill="url(#vipSkinW)"/>
+          <!-- شعر أمامي -->
+          <path d="M16 16 Q14 6 30 4 Q46 6 44 18 Q40 10 30 12 Q22 11 16 16 Z" fill="url(#vipHairW)"/>
+          <!-- خصلة جانبية -->
+          <path d="M14 20 Q12 40 16 60 L20 58 Q18 38 20 22 Z" fill="url(#vipHairW)"/>
+          <path d="M46 20 Q48 40 44 60 L40 58 Q42 38 40 22 Z" fill="url(#vipHairW)"/>
+          <!-- عيون -->
+          <ellipse cx="25" cy="24" rx="1.8" ry="2.4" fill="#1a0a05"/>
+          <ellipse cx="35" cy="24" rx="1.8" ry="2.4" fill="#1a0a05"/>
+          <!-- لمعة عين -->
+          <circle cx="25.4" cy="23.4" r=".5" fill="#fff"/>
+          <circle cx="35.4" cy="23.4" r=".5" fill="#fff"/>
+          <!-- شفايف -->
+          <path d="M26 30 Q30 32 34 30" stroke="#c41858" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+          <!-- خد وردي -->
+          <circle cx="20" cy="27" r="2" fill="rgba(255,140,160,.55)"/>
+          <circle cx="40" cy="27" r="2" fill="rgba(255,140,160,.55)"/>
+        </g>
+
+        <!-- قلب صغير بين الراسين -->
+        <path d="M100 14 c-2 -4 -8 -4 -8 1 c0 4 8 8 8 8 c0 0 8 -4 8 -8 c0 -5 -6 -5 -8 -1 z" fill="#ff1493" opacity=".9"/>
+      </svg>
       <div class="vip-blanket"></div>
       <div class="vip-petals"></div>
     </div>
