@@ -279,6 +279,7 @@
     linear-gradient(180deg, rgba(199,21,133,.85), rgba(139,0,51,.95));
   border-radius:8px 8px 14px 14px;
   box-shadow:inset 0 6px 14px rgba(255,255,255,.15), 0 8px 22px rgba(0,0,0,.5);
+  z-index:4; /* فوق صورة الثنائي ليبيّنوا تحتها */
 }
 .vip-blanket::after{
   content:''; position:absolute; top:0; left:0; right:0; height:8px;
@@ -293,17 +294,26 @@
 .vip-pillow-l{ left:6%; transform:rotate(-4deg); }
 .vip-pillow-r{ right:6%; transform:rotate(4deg); }
 
-/* ثنائي على السرير — صورة */
+/* ثنائي على السرير — صورة منسجمة مع المشهد */
 .vip-couple-img{
   position:absolute;
-  left:8%; right:8%; width:84%;
-  top:18%; height:70%;
-  z-index:3;
-  object-fit:contain;
+  left:6%; right:6%; width:88%;
+  top:10%;  /* يبدأ فوق المخدّات بشوي */
+  height:70%;
+  z-index:2; /* تحت البطانية (z-index 4) عشان البطانية تغطي السفل */
+  object-fit:cover;
+  object-position:center top; /* أبرز الراسين/الصدر */
   pointer-events:none;
-  filter:drop-shadow(0 6px 14px rgba(0,0,0,.6));
+  /* تنعيم الحواف ليندمج مع المخدّات والسرير */
+  -webkit-mask-image:radial-gradient(ellipse 78% 95% at 50% 35%, #000 55%, rgba(0,0,0,.6) 75%, transparent 95%);
+  mask-image:radial-gradient(ellipse 78% 95% at 50% 35%, #000 55%, rgba(0,0,0,.6) 75%, transparent 95%);
+  /* مطابقة الإضاءة الخافتة للغرفة */
+  filter:brightness(.82) saturate(.9) contrast(1.05);
+  border-radius:18px 18px 6px 6px;
   animation:vipCoupleSway 6s ease-in-out infinite;
 }
+/* ظل خفيف يدمج الصورة بالمرتبة */
+.vip-couple-img::after{ content:none; }
 @keyframes vipCoupleSway{
   0%,100%{ transform:translateY(0); }
   50%{ transform:translateY(-2px); }
