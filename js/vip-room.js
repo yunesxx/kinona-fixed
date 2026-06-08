@@ -200,6 +200,9 @@ function vipSendMsg(){
   const text = inp.value.trim();
   if(!text) return;
   inp.value = '';
+  document.getElementById('vip-send-btn')?.classList.add('hidden');
+  // خلي الكيبورد ثابت — لا تترك الـ input لئلا يقفل الكيبورد
+  inp.focus();
   const payload = {
     uid: currentUser.id,
     username: currentProfile?.username || 'guest',
