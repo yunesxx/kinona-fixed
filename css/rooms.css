@@ -292,6 +292,45 @@
 }
 .vip-pillow-l{ left:6%; transform:rotate(-4deg); }
 .vip-pillow-r{ right:6%; transform:rotate(4deg); }
+
+/* ثنائي على السرير — رجل ومرأة */
+.vip-couple{
+  position:absolute; top:30%;
+  width:16%; height:20%;
+  z-index:3;
+  border-radius:48% 48% 46% 46% / 55% 55% 45% 45%;
+  box-shadow:0 4px 12px rgba(0,0,0,.55);
+}
+.vip-couple-m{ left:24%; background:linear-gradient(180deg,#ecc09a,#d49a72); transform:rotate(10deg); }
+.vip-couple-w{ right:24%; background:linear-gradient(180deg,#fadcc0,#eec0a0); transform:rotate(-10deg); }
+.vip-couple-hair{ position:absolute; border-radius:50% 50% 35% 35% / 65% 65% 30% 30%; }
+.vip-couple-m .vip-couple-hair{
+  top:-18%; left:-12%; right:-12%; height:62%;
+  background:linear-gradient(180deg,#1a0f08,#3a2418);
+}
+.vip-couple-w .vip-couple-hair{
+  top:-14%; left:-25%; right:-25%; height:115%;
+  background:linear-gradient(180deg,#2a140a,#4a2418);
+  border-radius:50% 50% 55% 55% / 28% 28% 60% 60%;
+  z-index:-1;
+}
+/* ملامح الوجه */
+.vip-couple-face{ position:absolute; inset:32% 18% 32% 18%; }
+.vip-couple-face::before, .vip-couple-face::after{
+  content:''; position:absolute; top:18%; width:24%; height:3px;
+  background:rgba(20,10,5,.85); border-radius:3px;
+}
+.vip-couple-face::before{ left:12%; }
+.vip-couple-face::after{ right:12%; }
+/* خد وردي */
+.vip-couple-m::after, .vip-couple-w::after{
+  content:''; position:absolute;
+  width:18%; height:10%; border-radius:50%;
+  background:radial-gradient(circle, rgba(255,140,160,.55), transparent 70%);
+  top:55%;
+}
+.vip-couple-m::after{ left:18%; box-shadow:42% 0 0 -1px rgba(255,140,160,.55); }
+.vip-couple-w::after{ right:18%; box-shadow:-42% 0 0 -1px rgba(255,140,160,.55); }
 .vip-petals{
   position:absolute; top:38%; left:50%; transform:translateX(-50%);
   width:80%; height:50%;
