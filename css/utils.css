@@ -279,8 +279,9 @@
 }
 
 /* ══ VIP CONFIRM OVERLAYS — نفس استايل المحادثة العادية ══ */
+/* فوق #vip-room (z-index 8500) عشان شاشة التأكيد ما تطلع تحت الروم */
 #vip-img-confirm-overlay, #vip-vid-confirm-overlay{
-  position:fixed;inset:0;z-index:6500;
+  position:fixed;inset:0;z-index:9000;
   background:rgba(0,0,0,.92);
   display:none!important;
   flex-direction:column;

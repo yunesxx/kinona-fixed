@@ -464,6 +464,26 @@
   padding:4px 0;
 }
 
+/* صور/فيديو داخل bubble */
+.vip-msg-bubble.vip-msg-media{
+  padding:4px; max-width:260px;
+  background:rgba(255,255,255,.06);
+}
+.vip-msg.mine .vip-msg-bubble.vip-msg-media{
+  background:rgba(199,21,133,.25);
+  border-color:rgba(255,20,147,.3);
+}
+.vip-msg-bubble.vip-msg-media img,
+.vip-msg-bubble.vip-msg-media video{
+  display:block; width:100%; max-width:100%;
+  max-height:340px; object-fit:cover;
+  border-radius:10px;
+}
+.vip-msg-caption{
+  font-size:13px; color:#fff; padding:6px 8px 4px;
+  word-wrap:break-word; line-height:1.4;
+}
+
 /* صف الإدخال داخل VIP يعتمد على .cinput/.iwrap من chat.css (نفس الشات الأصلي).
    لا حاجة لـ env(safe-area-inset-bottom): --kb يغطي الكيبورد، وبدون كيبورد
    الـ .vip-chat تنتهي قبل الـ safe-area الطبيعي للنظام. */

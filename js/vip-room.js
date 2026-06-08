@@ -449,57 +449,39 @@ function vipRenderMsg(p, isMine){
   msgs.scrollTop = msgs.scrollHeight;
 }
 
-let _vipStageTimer = null;
+// عرض الصور/الفيديو داخل قائمة الرسائل كرسالة عادية — بدون stage ولا مؤقت إخفاء
 function vipRenderMedia(p, isMine){
-  const stage = document.getElementById('vip-media-stage');
-  if(!stage) return;
+  const msgs = document.getElementById('vip-msgs');
+  if(!msgs) return;
 
-  // أزل الميديا السابقة فوراً
-  stage.querySelectorAll('.vip-stage-item').forEach(el => el.remove());
-  if(_vipStageTimer){ clearTimeout(_vipStageTimer); _vipStageTimer = null; }
+  const wrap = document.createElement('div');
+  wrap.className = 'vip-msg ' + (isMine ? 'mine' : '');
 
-  const item = document.createElement('div');
-  item.className = 'vip-stage-item';
-
-  // اسم المرسل
-  const sender = document.createElement('div');
-  sender.className = 'vip-stage-sender';
   const av = document.createElement('div');
-  av.className = 'vmav';
+  av.className = 'vip-msg-av';
   av.innerHTML = p.avatar_url
-    ? '<img src="'+escHtml(p.avatar_url)+'">'
+    ? '<img src="'+escHtml(p.avatar_url)+'" loading="lazy">'
     : (p.username||'?')[0].toUpperCase();
-  const name = document.createElement('span');
-  name.textContent = p.username || '?';
-  sender.appendChild(av);
-  sender.appendChild(name);
-  item.appendChild(sender);
 
-  // وسم نوع الميديا (GIF / فيديو)
-  if(p.is_video){
-    const tag = document.createElement('div');
-    tag.className = 'vip-stage-gif-tag';
-    tag.textContent = '🎥 فيديو';
-    item.appendChild(tag);
-  } else if(p.is_gif){
-    const tag = document.createElement('div');
-    tag.className = 'vip-stage-gif-tag';
-    tag.textContent = 'GIF';
-    item.appendChild(tag);
+  const body = document.createElement('div');
+  body.className = 'vip-msg-body';
+  if(!isMine){
+    const name = document.createElement('div');
+    name.className = 'vip-msg-name';
+    name.textContent = p.username || '?';
+    body.appendChild(name);
   }
 
-  // العنصر الفعلي (فيديو أو صورة)
+  const bub = document.createElement('div');
+  bub.className = 'vip-msg-bubble vip-msg-media';
+
   let mediaEl;
   if(p.is_video){
     mediaEl = document.createElement('video');
     mediaEl.src = p.media_url;
     mediaEl.controls = true;
     mediaEl.playsInline = true;
-    mediaEl.autoplay = true;
-    mediaEl.muted = true; // autoplay يحتاج muted ع الموبايل
-    mediaEl.loop = false;
     mediaEl.preload = 'metadata';
-    // poster سريع لو موجود
     if(typeof cldVidPoster === 'function'){
       const poster = cldVidPoster(p.media_url, 480);
       if(poster) mediaEl.poster = poster;
@@ -507,30 +489,24 @@ function vipRenderMedia(p, isMine){
   } else {
     mediaEl = document.createElement('img');
     mediaEl.src = p.media_url;
-    mediaEl.loading = 'eager';
+    mediaEl.loading = 'lazy';
   }
-  item.appendChild(mediaEl);
+  bub.appendChild(mediaEl);
 
-  // التعليق (إن وجد)
   if(p.caption && p.caption.trim()){
     const capEl = document.createElement('div');
-    capEl.className = 'vip-stage-caption';
+    capEl.className = 'vip-msg-caption';
     capEl.textContent = p.caption;
-    item.appendChild(capEl);
+    bub.appendChild(capEl);
   }
 
-  stage.appendChild(item);
+  body.appendChild(bub);
+  wrap.appendChild(av);
+  wrap.appendChild(body);
+  msgs.appendChild(wrap);
 
-  // مدة الإخفاء: 10ث للصور، 65ث للفيديو (دقيقة + هامش)
-  const hideAfter = p.is_video ? 65000 : 10000;
-  _vipStageTimer = setTimeout(() => {
-    item.classList.add('fading');
-    setTimeout(() => {
-      if(mediaEl.tagName === 'VIDEO'){ try { mediaEl.pause(); mediaEl.src = ''; } catch(_){} }
-      item.remove();
-    }, 500);
-    _vipStageTimer = null;
-  }, hideAfter);
+  while(msgs.children.length > 80) msgs.removeChild(msgs.firstChild);
+  msgs.scrollTop = msgs.scrollHeight;
 }
 
 function vipAppendSys(text){
