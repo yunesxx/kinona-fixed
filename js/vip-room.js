@@ -309,27 +309,85 @@ let _vipPendingImgFile = null;
 let _vipPendingVidFile = null;
 let _vipPendingVidMeta = null;
 
+const VIP_MAX_BATCH = 10;
+
 function vipUploadMedia(input){
-  const file = input.files?.[0];
+  const files = Array.from(input.files || []);
   input.value = '';
-  if(!file) return;
-  if(!/^image\//.test(file.type)){ showToast('فقط صور أو GIF'); return; }
-  if(file.size > 20 * 1024 * 1024){ showToast('الحجم يتجاوز 20MB'); return; }
+  if(!files.length) return;
 
-  _vipPendingImgFile = file;
+  // فلتر: فقط صور وحجمها ≤ 20MB
+  const valid = files.filter(f => /^image\//.test(f.type) && f.size <= 20*1024*1024);
+  const skipped = files.length - valid.length;
+  if(!valid.length){ showToast('فقط صور أو GIF (≤20MB)'); return; }
 
-  // معاينة فورية عبر blob URL (بدل FileReader اللي بيعلّق على الصور الكبيرة)
-  const prev = document.getElementById('vip-img-confirm-preview');
-  if(prev){
-    if(prev.dataset.blobUrl){ try{ URL.revokeObjectURL(prev.dataset.blobUrl); }catch(_){} }
-    const u = URL.createObjectURL(file);
-    prev.src = u;
-    prev.dataset.blobUrl = u;
+  // قص لأقصى 10 صور
+  let batch = valid;
+  if(batch.length > VIP_MAX_BATCH){
+    showToast(`الحد الأقصى ${VIP_MAX_BATCH} صور — تم تجاهل الباقي`);
+    batch = batch.slice(0, VIP_MAX_BATCH);
+  } else if(skipped > 0){
+    showToast(`تم تجاهل ${skipped} ملف (غير صورة أو >20MB)`);
   }
-  const cap = document.getElementById('vip-img-confirm-caption');
-  if(cap) cap.value = '';
-  document.getElementById('vip-img-confirm-overlay')?.classList.add('show');
-  setTimeout(() => cap?.focus(), 300);
+
+  // صورة واحدة → معاينة + caption كالعادة
+  if(batch.length === 1){
+    _vipPendingImgFile = batch[0];
+    const prev = document.getElementById('vip-img-confirm-preview');
+    if(prev){
+      if(prev.dataset.blobUrl){ try{ URL.revokeObjectURL(prev.dataset.blobUrl); }catch(_){} }
+      const u = URL.createObjectURL(batch[0]);
+      prev.src = u;
+      prev.dataset.blobUrl = u;
+    }
+    const cap = document.getElementById('vip-img-confirm-caption');
+    if(cap) cap.value = '';
+    document.getElementById('vip-img-confirm-overlay')?.classList.add('show');
+    setTimeout(() => cap?.focus(), 300);
+    return;
+  }
+
+  // دفعة 2-10 صور → ارفع كل واحدة ع التوالي بدون شاشة تأكيد
+  vipUploadBatch(batch);
+}
+
+async function vipUploadBatch(files){
+  vipShowUploadProgress(true, `0/${files.length}`);
+  let done = 0, failed = 0;
+  for(const file of files){
+    try {
+      await vipDoImageUpload(file, '');
+    } catch(e){
+      console.error('vipUploadBatch item:', e);
+      failed++;
+    }
+    done++;
+    vipShowUploadProgress(true, `${done}/${files.length}`);
+  }
+  vipShowUploadProgress(false);
+  if(failed > 0) showToast(`فشل رفع ${failed} من ${files.length}`);
+}
+
+// منطق رفع صورة واحدة — قابل لإعادة الاستخدام (للوحدة + الدفعة)
+async function vipDoImageUpload(file, caption){
+  const isGif = file.type === 'image/gif';
+  if(!isGif && typeof compressImage === 'function'){
+    try { file = await compressImage(file, 1920, 0.85); } catch(_){}
+  }
+  const ext = isGif ? 'gif' : 'jpg';
+  const path = `vip/${currentUser.id}/${Date.now()}-${Math.random().toString(36).slice(2,7)}.${ext}`;
+  const {error} = await sb.storage.from('posts').upload(path, file, {upsert:true, contentType:file.type});
+  if(error) throw error;
+  const url = sb.storage.from('posts').getPublicUrl(path).data.publicUrl;
+  const payload = {
+    uid: currentUser.id,
+    username: currentProfile?.username || 'guest',
+    avatar_url: currentProfile?.avatar_url || null,
+    media_url: url, is_gif: isGif, caption: caption || '', ts: Date.now()
+  };
+  vipRenderMedia(payload, true);
+  vipChannel?.send({type:'broadcast', event:'vip_msg', payload});
+  vipBumpActivity(2);
 }
 
 function vipCancelImgSend(){
@@ -345,43 +403,18 @@ function vipCancelImgSend(){
 
 async function vipConfirmImgSend(){
   if(!_vipPendingImgFile) return;
-  let file = _vipPendingImgFile;
+  const file = _vipPendingImgFile;
   _vipPendingImgFile = null;
   const caption = document.getElementById('vip-img-confirm-caption')?.value.trim() || '';
 
-  // أغلق الـ overlay فوراً + حرّر blob URL للمعاينة
   document.getElementById('vip-img-confirm-overlay')?.classList.remove('show');
   const prev = document.getElementById('vip-img-confirm-preview');
   if(prev?.dataset.blobUrl){ try{ URL.revokeObjectURL(prev.dataset.blobUrl); }catch(_){} delete prev.dataset.blobUrl; }
 
-  // ضغط الصورة قبل الرفع (إلا GIF نخليه كما هو)
-  const isGif = file.type === 'image/gif';
-  if(!isGif && typeof compressImage === 'function'){
-    try { file = await compressImage(file, 1920, 0.85); } catch(_){}
-  }
-
   vipShowUploadProgress(true);
-  try {
-    const ext = isGif ? 'gif' : 'jpg';
-    const path = `vip/${currentUser.id}/${Date.now()}.${ext}`;
-    const {error} = await sb.storage.from('posts').upload(path, file, {upsert:true, contentType:file.type});
-    if(error) throw error;
-    const url = sb.storage.from('posts').getPublicUrl(path).data.publicUrl;
-    const payload = {
-      uid: currentUser.id,
-      username: currentProfile?.username || 'guest',
-      avatar_url: currentProfile?.avatar_url || null,
-      media_url: url, is_gif: isGif, caption, ts: Date.now()
-    };
-    vipRenderMedia(payload, true);
-    vipChannel?.send({type:'broadcast', event:'vip_msg', payload});
-    vipBumpActivity(2);
-  } catch(e){
-    console.error('vipConfirmImgSend:', e);
-    showToast('فشل رفع الصورة');
-  } finally {
-    vipShowUploadProgress(false);
-  }
+  try { await vipDoImageUpload(file, caption); }
+  catch(e){ console.error('vipConfirmImgSend:', e); showToast('فشل رفع الصورة'); }
+  finally { vipShowUploadProgress(false); }
 }
 
 // ══════════════════════
@@ -491,15 +524,19 @@ async function vipConfirmVidSend(){
   }
 }
 
-function vipShowUploadProgress(show){
+function vipShowUploadProgress(show, label){
   let bar = document.getElementById('vip-up-progress');
   if(show){
     if(!bar){
       bar = document.createElement('div');
       bar.id = 'vip-up-progress';
       bar.className = 'vip-upload-progress';
-      bar.innerHTML = '<span>⬆️ يتم الرفع...</span><div class="upbar"><div class="upbar-fill"></div></div>';
+      bar.innerHTML = '<span class="vip-up-text">⬆️ يتم الرفع...</span><div class="upbar"><div class="upbar-fill"></div></div>';
       document.getElementById('vip-room').appendChild(bar);
+    }
+    if(label){
+      const t = bar.querySelector('.vip-up-text');
+      if(t) t.textContent = `⬆️ يتم الرفع... ${label}`;
     }
   } else if(bar) bar.remove();
 }
