@@ -429,9 +429,12 @@
   animation:vipMsgIn .25s ease-out;
   direction:rtl;
   align-self:flex-start;
+  /* رسائل الآخرين: الصورة على اليسار الخارجي */
+  flex-direction:row-reverse;
 }
 @keyframes vipMsgIn{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;} }
-.vip-msg.mine{ align-self:flex-end; }
+/* رسائلي: الصورة على اليمين الخارجي */
+.vip-msg.mine{ align-self:flex-end; flex-direction:row; }
 .vip-msg-av{
   width:30px; height:30px; border-radius:50%;
   background:linear-gradient(135deg,#ff1493,#8b0033);
