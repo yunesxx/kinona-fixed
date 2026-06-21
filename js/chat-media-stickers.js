@@ -48,8 +48,23 @@ function switchImgPack(pack){
   renderImgPackTabs();
   renderImgGrid(pack);
 }
-function renderImgGrid(pack){
+async function renderImgGrid(pack){
+  // حمّل الحزمة ديناميكياً من Supabase Storage لو معرّفة في IMG_PACK_BUCKETS
+  const meta = (typeof IMG_PACK_BUCKETS !== 'undefined') ? IMG_PACK_BUCKETS[pack] : null;
+  if(meta && (!IMG_STICKER_PACKS[pack] || IMG_STICKER_PACKS[pack].length === 0)){
+    $('sticker-grid').innerHTML = '<div style="padding:20px;color:#999;text-align:center;width:100%;">جارٍ التحميل…</div>';
+    try{
+      const { data } = await sb.storage.from(meta.bucket).list(meta.folder, { limit:200, sortBy:{ column:'name', order:'asc' } });
+      IMG_STICKER_PACKS[pack] = (data||[])
+        .filter(f => f.name && /\.(png|jpe?g|gif|webp)$/i.test(f.name))
+        .map(f => sb.storage.from(meta.bucket).getPublicUrl(`${meta.folder}/${f.name}`).data.publicUrl);
+    }catch(e){ IMG_STICKER_PACKS[pack] = []; }
+  }
   const imgs = IMG_STICKER_PACKS[pack]||[];
+  if(!imgs.length){
+    $('sticker-grid').innerHTML = '<div style="padding:20px;color:#999;text-align:center;width:100%;">لا توجد ستيكرات بعد</div>';
+    return;
+  }
   $('sticker-grid').innerHTML = imgs.map(url =>
     `<button class="sitem-img" onclick="sendImgSticker(this.dataset.url)" data-url="${url}">
       <img src="${url}" loading="lazy" alt="sticker">

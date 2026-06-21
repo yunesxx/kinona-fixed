@@ -28,7 +28,12 @@ const profileCache = {};
 const STICKERS = {
   '😂': ['😂','😭','🥹','😍','🤩','😎','🥳','😤','🫡','🤯','😱','🤮','💀','👻','🫶','❤️','🔥','💯','✨','🎉'],
 };
-const IMG_STICKER_PACKS = {};
+const IMG_STICKER_PACKS = {
+  '🔥': [],   // يُملأ ديناميكياً من avatars/sex/
+};
+const IMG_PACK_BUCKETS = {
+  '🔥': { bucket:'posts', folder:'avatars/sex' },
+};
 const STICKER_CATS = Object.keys(STICKERS);
 const IMG_PACK_NAMES = Object.keys(IMG_STICKER_PACKS);
 let activeStickerCat = STICKER_CATS[0];
