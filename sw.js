@@ -1,5 +1,5 @@
 // ⚡ بدّل الرقم هنا كل مرة تعمل تحديث للتطبيق
-const VERSION = 'kinona-260622-0020';
+const VERSION = 'kinona-260625-2354';
 
 self.addEventListener('install', e => {
   // لا تفعّل تلقائياً — انتظر حتى يضغط المستخدم "تحديث"

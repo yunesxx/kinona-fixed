@@ -1,23 +1,19 @@
 // ══════════════════════════════════════
-// LOAD MESSAGES — DocumentFragment
+// LOAD MESSAGES — DocumentFragment + in-memory cache
+// الكاش بيخلّي إعادة فتح نفس الشات فوريّة بدل ما ينتظر network roundtrip
 // ══════════════════════════════════════
-async function loadMessages(){
-  if(!activeChat) return;
-  const cid = [currentUser.id, activeChat.id].sort().join('_');
-  // نجلب أحدث 100 رسالة (تنازلي) ثم نعكسها للعرض من الأقدم للأحدث —
-  // وإلا في المحادثات الطويلة (>100) نعرض الأقدم ولا تظهر الرسائل الجديدة
-  const {data:_raw, error} = await sb.from('messages')
-    .select('*').eq('chat_id', cid)
-    .order('created_at', {ascending:false}).limit(100);
-  if(error){ console.error('loadMessages:', error); return; }
-  const data = (_raw || []).reverse();
+const _msgCacheByCid = new Map(); // cid -> آخر مصفوفة رسائل تم رسمها
 
-  const msgsEl = $('msgs');
+function _msgsSnapshotKey(data){
+  if(!data || !data.length) return '0';
+  const last = data[data.length - 1];
+  return `${data.length}|${last.id}|${last.created_at}|${last.reaction||''}`;
+}
 
-  // بطاقة البروفايل
-  const profileCard = document.createElement('div');
-  profileCard.className = 'chat-profile-card';
-  profileCard.innerHTML = `
+function _buildProfileCard(){
+  const card = document.createElement('div');
+  card.className = 'chat-profile-card';
+  card.innerHTML = `
     <div class="chat-profile-av">
       ${activeChat.avatar_url
         ? `<img src="${activeChat.avatar_url}">`
@@ -29,10 +25,12 @@ async function loadMessages(){
       onclick="closeChat();setTimeout(()=>openProfile('${activeChat.id}'),200)">
       عرض الملف الشخصي
     </button>`;
+  return card;
+}
 
-  // بناء الرسائل بـ DocumentFragment
+function _renderChatMessages(data, msgsEl){
   const frag = document.createDocumentFragment();
-  frag.appendChild(profileCard);
+  frag.appendChild(_buildProfileCard());
 
   const rows = [];
   (data||[]).forEach(m => {
@@ -59,12 +57,11 @@ async function loadMessages(){
     rows.push({row, id:m.id, own:out});
   });
 
-  // دفعة DOM واحدة — أسرع من innerHTML المتعدد
   msgsEl.innerHTML = '';
   msgsEl.appendChild(frag);
   msgsEl.scrollTop = msgsEl.scrollHeight;
 
-  // أعِد النزول للأسفل بعد تحميل الصور/الفيديو (وإلا تبقى آخر صورة تحت الشاشة)
+  // أعِد النزول للأسفل بعد تحميل الصور/الفيديو
   msgsEl.querySelectorAll('img, video').forEach(el => {
     const stick = () => { msgsEl.scrollTop = msgsEl.scrollHeight; };
     if(el.tagName === 'IMG'){
@@ -74,17 +71,48 @@ async function loadMessages(){
     }
   });
 
-  // اضبط cursor المزامنة على أحدث رسالة محمّلة
-  const _lastRow = (data && data.length) ? data[data.length - 1] : null;
-  _lastMsgSync = _lastRow?.created_at || new Date().toISOString();
-
-  // long press بعد الـ render
   rows.forEach(({row, id, own}) => addLongPress(row, () => showChatOpts(id, own)));
 
-  // ── Cosmetics: طبّق على header المحادثة والرسائل ──
-  if (activeChat?.id && typeof applyChatCosmetics === 'function') {
+  if(activeChat?.id && typeof applyChatCosmetics === 'function'){
     applyChatCosmetics(activeChat.id).catch(e => console.warn('[Cosmetics] chat:', e));
   }
+}
+
+async function loadMessages(){
+  if(!activeChat) return;
+  const cid = [currentUser.id, activeChat.id].sort().join('_');
+  const msgsEl = $('msgs');
+
+  // ── 1. اعرض الكاش فوراً (لو موجود) — هاد بيخفّض زمن الفتح إلى ~0ms ──
+  const cached = _msgCacheByCid.get(cid);
+  const cachedKey = cached ? _msgsSnapshotKey(cached) : null;
+  if(cached){
+    _renderChatMessages(cached, msgsEl);
+  } else {
+    // ما في كاش → اعرض البطاقة على الأقل عشان الشات ما يبان فاضي
+    msgsEl.innerHTML = '';
+    msgsEl.appendChild(_buildProfileCard());
+  }
+
+  // ── 2. اجلب أحدث 100 رسالة من DB ──
+  const {data:_raw, error} = await sb.from('messages')
+    .select('*').eq('chat_id', cid)
+    .order('created_at', {ascending:false}).limit(100);
+  if(error){ console.error('loadMessages:', error); return; }
+  const data = (_raw || []).reverse();
+
+  // ── 3. لو المستخدم بدّل المحادثة أثناء الـ fetch، اخرج ──
+  if(!activeChat || [currentUser.id, activeChat.id].sort().join('_') !== cid) return;
+
+  // ── 4. حدّث الكاش، وأعِد الرسم فقط لو الـ snapshot اختلف (يمنع flash) ──
+  _msgCacheByCid.set(cid, data);
+  if(_msgsSnapshotKey(data) !== cachedKey){
+    _renderChatMessages(data, msgsEl);
+  }
+
+  // اضبط cursor المزامنة على أحدث رسالة محمّلة
+  const _lastRow = data.length ? data[data.length - 1] : null;
+  _lastMsgSync = _lastRow?.created_at || new Date().toISOString();
 
   // seen label
   const cid2 = [currentUser.id, activeChat?.id].sort().join('_');

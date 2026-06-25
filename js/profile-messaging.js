@@ -175,6 +175,16 @@ function appendMessage(msg, isOut){
   msgs.appendChild(div);
   addLongPress(div, () => showChatOpts(msg.id, isOut));
 
+  // حدّث الكاش عشان إعادة فتح الشات تظهر الرسالة فوراً (تجاهل الرسائل المؤقتة)
+  if(activeChat && !msg._pending && typeof _msgCacheByCid !== 'undefined'){
+    const cid = [currentUser.id, activeChat.id].sort().join('_');
+    const arr = _msgCacheByCid.get(cid);
+    if(arr && !arr.some(m => m.id === msg.id)){
+      arr.push(msg);
+      if(arr.length > 200) arr.splice(0, arr.length - 100);
+    }
+  }
+
   // طبّق cosmetics على الرسالة الجديدة
   if (activeChat?.id && typeof applyChatCosmetics === 'function') {
     applyChatCosmetics(activeChat.id).catch(() => {});
